@@ -1,0 +1,3240 @@
+﻿<title>Simulador de Implementación WMS — Radec</title>
+<meta charset="UTF-8">
+<style>
+  :root{
+    --bg:#f4f6f9; --panel:#ffffff; --ink:#1c2530; --sub:#5b6b7c; --line:#e1e6ec;
+    --brand:#0f4c81; --brand-light:#e7f0f9; --good:#1a8754; --good-bg:#e6f6ee;
+    --bad:#c0392b; --bad-bg:#fdeceb; --warn:#b8860b; --warn-bg:#fff6e0;
+    --mx:#0f4c81; --co:#c9902f; --shadow:0 1px 3px rgba(20,30,45,.08), 0 1px 2px rgba(20,30,45,.06);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;}
+  h1,h2,h3,h4{margin:0 0 6px 0;font-weight:600;}
+  header.top{background:linear-gradient(135deg,#0f4c81,#123a63);color:#fff;padding:18px 24px;box-shadow:var(--shadow);}
+  header.top h1{font-size:19px;letter-spacing:.2px;}
+  header.top .sub{font-size:12.5px;opacity:.85;margin-top:2px;}
+  .kpis{display:flex;gap:12px;margin-top:14px;flex-wrap:wrap;}
+  .kpi{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:9px 14px;min-width:150px;flex:1 1 150px;max-width:260px;}
+  .kpi .lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;opacity:.8;}
+  .kpi .val{font-size:18px;font-weight:700;margin-top:2px;}
+  .kpi.badge-ok{background:var(--good-bg);border-color:var(--good);}
+  .kpi.badge-ok .val,.kpi.badge-ok .lbl{color:var(--good);}
+  .kpi.badge-bad{background:var(--bad-bg);border-color:var(--bad);}
+  .kpi.badge-bad .val,.kpi.badge-bad .lbl{color:var(--bad);}
+
+  .layout{display:grid;grid-template-columns:300px 1fr;gap:16px;padding:16px 20px;align-items:start;}
+  aside.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:var(--shadow);position:sticky;top:16px;max-height:calc(100vh - 32px);overflow-y:auto;}
+  aside.panel h3{font-size:12.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--sub);border-bottom:1px solid var(--line);padding-bottom:6px;margin-bottom:10px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12px;color:var(--sub);margin-bottom:4px;font-weight:600;}
+  .field input[type=number],.field input[type=date],.field select{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font-size:13px;background:#fbfcfe;}
+  .scenario-btns{display:flex;gap:6px;flex-wrap:wrap;}
+  .scenario-btns button{flex:1;padding:7px 6px;border:1px solid var(--brand);background:var(--brand-light);color:var(--brand);border-radius:6px;font-size:12px;cursor:pointer;font-weight:600;}
+  .scenario-btns button.active{background:var(--brand);color:#fff;}
+  .order-list{list-style:none;margin:0;padding:0;max-height:340px;overflow-y:auto;border:1px solid var(--line);border-radius:8px;}
+  .order-list li{display:flex;align-items:center;gap:6px;padding:6px 8px;border-bottom:1px solid var(--line);font-size:12.5px;}
+  .order-list li:last-child{border-bottom:none;}
+  .order-list .tag{width:8px;height:8px;border-radius:50%;flex:none;}
+  .order-list .name{flex:1;}
+  .order-list button{border:1px solid var(--line);background:#fff;border-radius:5px;width:22px;height:22px;cursor:pointer;font-size:11px;line-height:1;color:var(--sub);}
+  .order-list button:hover{background:var(--brand-light);color:var(--brand);}
+  .note{font-size:11.5px;color:var(--sub);line-height:1.4;margin-top:6px;}
+
+  main.content{min-width:0;}
+  nav.tabs{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:6px;margin-bottom:14px;box-shadow:var(--shadow);flex-wrap:wrap;}
+  nav.tabs button{flex:1;padding:9px 10px;border:none;background:transparent;border-radius:8px;font-size:12.5px;font-weight:600;color:var(--sub);cursor:pointer;white-space:nowrap;}
+  nav.tabs button.active{background:var(--brand);color:#fff;}
+  section.tab{display:none;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;box-shadow:var(--shadow);}
+  section.tab.active{display:block;}
+  section.tab h2{font-size:16px;color:var(--brand);}
+  section.tab .desc{font-size:12.5px;color:var(--sub);margin-bottom:14px;}
+
+  table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  table th{background:#f0f3f7;text-align:left;padding:7px 8px;font-size:11px;text-transform:uppercase;letter-spacing:.3px;color:var(--sub);border-bottom:2px solid var(--line);position:sticky;top:0;}
+  table td{padding:6px 8px;border-bottom:1px solid var(--line);}
+  table tbody tr:hover{background:#f8fafc;}
+  .num{text-align:right;font-variant-numeric:tabular-nums;}
+  .center{text-align:center;}
+  .scroll-x{overflow-x:auto;}
+  .scroll-y{max-height:520px;overflow-y:auto;}
+
+  .gantt-row{display:flex;align-items:center;margin-bottom:3px;}
+  .gantt-label{width:170px;flex:none;font-size:11.5px;padding-right:8px;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .gantt-track{flex:1;position:relative;height:22px;background:#f0f3f7;border-radius:5px;}
+  .gantt-seg{position:absolute;top:1px;bottom:1px;border-radius:4px;font-size:9.5px;color:#fff;display:flex;align-items:center;padding-left:4px;overflow:hidden;white-space:nowrap;opacity:.95;}
+  .gantt-axis{display:flex;margin:8px 0 6px 178px;font-size:10.5px;color:var(--sub);position:relative;height:14px;}
+  .gantt-today{position:absolute;top:0;bottom:0;width:2px;background:var(--bad);}
+
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:11.5px;color:var(--sub);}
+  .legend span{display:inline-flex;align-items:center;gap:5px;}
+  .legend i{width:10px;height:10px;border-radius:3px;display:inline-block;}
+
+  .pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:700;}
+  .pill-ok{background:var(--good-bg);color:var(--good);}
+  .pill-bad{background:var(--bad-bg);color:var(--bad);}
+  .pill-warn{background:var(--warn-bg);color:var(--warn);}
+
+  input.cell-input{width:64px;padding:4px 6px;border:1px solid var(--line);border-radius:5px;font-size:12px;text-align:right;}
+  select.cell-select{padding:4px 6px;border:1px solid var(--line);border-radius:5px;font-size:12px;}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+  .card{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:#fbfcfe;}
+  .card h4{font-size:12px;color:var(--sub);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;}
+  .barh{display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:11.5px;}
+  .barh .name{width:150px;flex:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--sub);}
+  .barh .track{flex:1;background:#eef1f5;border-radius:4px;height:14px;position:relative;}
+  .barh .fill{background:var(--brand);height:100%;border-radius:4px;}
+  .barh .amt{width:90px;text-align:right;flex:none;font-variant-numeric:tabular-nums;}
+
+  .save-row{display:flex;gap:8px;margin-bottom:14px;}
+  .save-row input{flex:1;padding:7px 10px;border:1px solid var(--line);border-radius:6px;}
+  .save-row button, .btn{padding:7px 14px;border:none;background:var(--brand);color:#fff;border-radius:6px;font-weight:600;cursor:pointer;font-size:12.5px;}
+  .btn.secondary{background:#fff;border:1px solid var(--brand);color:var(--brand);}
+  .btn.danger{background:#fff;border:1px solid var(--bad);color:var(--bad);}
+
+  details.explain{border:1px solid var(--line);border-radius:8px;margin-bottom:8px;overflow:hidden;}
+  details.explain summary{padding:10px 12px;cursor:pointer;font-weight:600;background:#f8fafc;font-size:13px;}
+  details.explain .body{padding:10px 14px;font-size:12.5px;line-height:1.55;color:#31404f;}
+  details.explain .body ul{margin:4px 0 4px 18px;padding:0;}
+  .warn-box{background:var(--warn-bg);border:1px solid var(--warn);border-radius:8px;padding:10px 12px;font-size:12px;color:#7a5c00;margin-bottom:10px;}
+
+  @media (prefers-color-scheme: dark){
+    :root{--bg:#12161c;--panel:#1a212b;--ink:#e7edf5;--sub:#93a1b1;--line:#2b3644;--brand-light:#1c2f45;--good-bg:#123326;--bad-bg:#3a1917;--warn-bg:#3a2f0f;--warn:#e0b23c;}
+    table th{background:#20293580;}
+    .card,input.cell-input,.field input,.field select,.save-row input{background:#141a22;color:var(--ink);border-color:var(--line);}
+    .gantt-track,.barh .track{background:#232d3a;}
+    details.explain summary{background:#141a22;}
+  }
+</style>
+
+<header class="top">
+  <h1>Simulador de Implementación — Programa WMS multi-sitio</h1>
+  <div class="sub">Fuente: <code>wms-scenarios-s5.xlsx</code> (datos no modificados) · Objetivo: completar el programa en ≤ 8 meses al menor costo posible</div>
+  <div class="kpis" id="kpiBar"></div>
+</header>
+
+<div class="layout">
+  <aside class="panel">
+    <h3>Escenario base</h3>
+    <div class="field">
+      <div class="scenario-btns" id="scenarioBtns"></div>
+      <div class="note">Actual y Escenario 1 cargan la dotación (headcount) tal cual el archivo. Cualquier ajuste que hagas pasa a "Personalizado".</div>
+    </div>
+
+    <h3>Parámetros generales</h3>
+    <div class="field">
+      <label for="startDate">Fecha de inicio del programa</label>
+      <input type="date" id="startDate">
+    </div>
+    <div class="field">
+      <label for="numFronts">Frentes en paralelo</label>
+      <input type="number" id="numFronts" min="1" max="15" step="1">
+    </div>
+
+    <h3>Orden de entrada de sitios</h3>
+    <ul class="order-list" id="orderList"></ul>
+    <div class="note">Usa las flechas para cambiar en qué orden entra cada sitio a la cola de frentes. El primer sitio de cada cluster en arrancar usa la maduración "A" (más lenta); los siguientes del mismo cluster usan "B".</div>
+
+    <h3>Guardar cambios</h3>
+    <button class="btn" id="btnGoScenarios" style="width:100%;">Ir a Escenarios →</button>
+  </aside>
+
+  <main class="content">
+    <nav class="tabs" id="tabNav"></nav>
+
+    <section class="tab" id="tab-1">
+      <h2>1 · Plan de trabajo general del programa</h2>
+      <div class="desc">Vista de inicio a fin de todo el programa: cada barra es un sitio, coloreado por cluster, distribuido en los frentes paralelos que definiste.</div>
+      <div id="ganttGeneral"></div>
+      <div class="legend" id="legendGeneral"></div>
+    </section>
+
+    <section class="tab" id="tab-2">
+      <h2>2 · Plan de trabajo por sitio</h2>
+      <div class="desc">Selecciona un sitio para ver el detalle fase por fase (fechas, duración, madurez aplicada).</div>
+      <div class="field" style="max-width:280px;">
+        <label for="siteSelect">Sitio</label>
+        <select id="siteSelect" class="cell-select" style="width:100%;"></select>
+      </div>
+      <div id="siteDetailCards" class="grid3" style="margin:12px 0;"></div>
+      <div id="ganttSite"></div>
+      <div class="scroll-x" style="margin-top:14px;">
+        <table id="sitePhaseTable"></table>
+      </div>
+    </section>
+
+    <section class="tab" id="tab-3">
+      <h2>3 · Uso de recursos por sitio y general</h2>
+      <div class="desc">Edita la dotación (headcount) por rol — es la palanca principal de capacidad. La utilización compara la demanda pico generada por tu cronograma contra la dotación disponible.</div>
+      <div class="scroll-x">
+        <table id="resourceTable"></table>
+      </div>
+      <h4 style="margin-top:18px;">Utilización general por rol (pico de demanda simultánea vs. dotación)</h4>
+      <div id="utilCards"></div>
+      <h4 style="margin-top:18px;">Consumo de recursos por sitio (FTE-semana acumuladas)</h4>
+      <div class="scroll-x"><table id="resourceBySiteTable"></table></div>
+    </section>
+
+    <section class="tab" id="tab-4">
+      <h2>4 · Guardar y comparar escenarios</h2>
+      <div class="desc">Guarda la configuración actual de palancas (dotación, orden de sitios, frentes, fecha de inicio, elección de etiquetado/wifi) como un escenario nombrado para compararlo después.</div>
+      <div class="save-row">
+        <input type="text" id="scenarioName" placeholder="Nombre del escenario (ej. '6 frentes + refuerzo SAP')">
+        <button class="btn" id="btnSaveScenario">Guardar escenario actual</button>
+      </div>
+      <div class="scroll-x"><table id="scenarioCompareTable"></table></div>
+      <div class="note" style="margin-top:8px;">El escenario que cumple ≤ 8 meses con el menor costo se resalta en verde.</div>
+    </section>
+
+    <section class="tab" id="tab-5">
+      <h2>5 · Resumen de costos</h2>
+      <div class="desc">Costo total del escenario actual, desagregado por sitio y por tipo de recurso. No incluye "Beneficio por mes" (es un beneficio, no un costo).</div>
+      <div class="card" style="margin-bottom:16px;">
+        <h4>Palancas de costo único por sitio (etiquetado / wifi)</h4>
+        <div class="scroll-x"><table id="costLeverTable"></table></div>
+      </div>
+      <div class="grid3" id="costSummaryCards" style="margin-bottom:16px;"></div>
+      <div class="grid2">
+        <div class="card">
+          <h4>Costo por sitio</h4>
+          <div id="costBySite"></div>
+        </div>
+        <div class="card">
+          <h4>Costo por tipo de recurso (rol)</h4>
+          <div id="costByRole"></div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px;">
+        <h4>Costo por sitio — detalle (implementación única + mano de obra asignada)</h4>
+        <div class="scroll-x"><table id="costDetailTable"></table></div>
+      </div>
+    </section>
+
+    <section class="tab" id="tab-6">
+      <h2>Explicación del archivo y supuestos del simulador</h2>
+      <div class="desc">Qué contiene cada pestaña del Excel, cómo se conecta con el motor de cálculo, y qué supuestos usa el simulador donde el archivo no lo especifica.</div>
+      <div id="explainBody"></div>
+    </section>
+  </main>
+</div>
+
+<script>
+const RAW_DATA = {
+    "sitesMaster":  [
+                        {
+                            "Country":  "Mexico",
+                            "Site":  "Site 01",
+                            "Cluster":  2,
+                            "CapacityMioHL":  3.72,
+                            "ProductionMioHL":  1.43,
+                            "DistributionVolumeKHL":  6400,
+                            "LineCapacity":  0.38440860215053763,
+                            "ProductionLines":  3,
+                            "Warehouses":  1,
+                            "WarehouseArea":  9100,
+                            "OccupationLV":  0.81500000000000006,
+                            "AislesIdentification":  0.89,
+                            "BoxIdentification":  "Yes",
+                            "ControlTower":  "No",
+                            "T2MKPKA":  "No",
+                            "ForkliftsInLogistics":  18,
+                            "HCForklifts":  38,
+                            "WifiState":  0.85,
+                            "Tablets":  15,
+                            "CountingDevices":  5
+                        },
+                        {
+                            "Country":  "Mexico",
+                            "Site":  "Site 02",
+                            "Cluster":  2,
+                            "CapacityMioHL":  6.46,
+                            "ProductionMioHL":  4.77,
+                            "DistributionVolumeKHL":  11160,
+                            "LineCapacity":  0.73839009287925694,
+                            "ProductionLines":  6,
+                            "Warehouses":  2,
+                            "WarehouseArea":  15572,
+                            "OccupationLV":  0.94,
+                            "AislesIdentification":  0,
+                            "BoxIdentification":  "No",
+                            "ControlTower":  "No",
+                            "T2MKPKA":  "No",
+                            "ForkliftsInLogistics":  30,
+                            "HCForklifts":  90,
+                            "WifiState":  0,
+                            "Tablets":  29,
+                            "CountingDevices":  6
+                        },
+                        {
+                            "Country":  "Mexico",
+                            "Site":  "Site 03",
+                            "Cluster":  2,
+                            "CapacityMioHL":  6.46,
+                            "ProductionMioHL":  4.77,
+                            "DistributionVolumeKHL":  11160,
+                            "LineCapacity":  0.73839009287925694,
+                            "ProductionLines":  6,
+                            "Warehouses":  2,
+                            "WarehouseArea":  15572,
+                            "OccupationLV":  0.94,
+                            "AislesIdentification":  0,
+                            "BoxIdentification":  "No",
+                            "ControlTower":  "No",
+                            "T2MKPKA":  "No",
+                            "ForkliftsInLogistics":  30,
+                            "HCForklifts":  90,
+                            "WifiState":  0,
+                            "Tablets":  29,
+                            "CountingDevices":  6
+                        },
+                        {
+                            "Country":  "Mexico",
+                            "Site":  "Site 04",
+                            "Cluster":  2,
+                            "CapacityMioHL":  6.59,
+                            "ProductionMioHL":  4.58,
+                            "DistributionVolumeKHL":  11520,
+                            "LineCapacity":  0.69499241274658574,
+                            "ProductionLines":  5,
+                            "Warehouses":  2,
+                            "WarehouseArea":  17742,
+                            "OccupationLV":  0.78,
+                            "AislesIdentification":  0,
+                            "BoxIdentification":  "No",
+                            "ControlTower":  "Yes",
+                            "T2MKPKA":  "No",
+                            "ForkliftsInLogistics":  37,
+                            "HCForklifts":  80,
+                            "WifiState":  0,
+                            "Tablets":  15,
+                            "CountingDevices":  4
+                        },
+                        {
+                            "Country":  "Mexico",
+                            "Site":  "Site 05",
+                            "Cluster":  3,
+                            "CapacityMioHL":  2.75,
+                            "ProductionMioHL":  2.12,
+                            "DistributionVolumeKHL":  6848,
+                            "LineCapacity":  0.770909090909091,
+                            "ProductionLines":  2,
+                            "Warehouses":  3,
+                            "WarehouseArea":  5239,
+                            "OccupationLV":  0.855,
+                            "AislesIdentification":  0.9,
+                            "BoxIdentification":  "Yes",
+                            "ControlTower":  "No",
+                            "T2MKPKA":  "Yes",
+                            "ForkliftsInLogistics":  14,
+                            "HCForklifts":  42,
+                            "WifiState":  0,
+                            "Tablets":  14,
+                            "CountingDevices":  4
+                        },
+                        {
+                            "Country":  "Mexico",
+                            "Site":  "Site 06",
+                            "Cluster":  1,
+                            "CapacityMioHL":  13.2,
+                            "ProductionMioHL":  12.19,
+                            "DistributionVolumeKHL":  29946,
+                            "LineCapacity":  0.92348484848484846,
+                            "ProductionLines":  9,
+                            "Warehouses":  2,
+                            "WarehouseArea":  36333,
+                            "OccupationLV":  1,
+                            "AislesIdentification":  0.93,
+                            "BoxIdentification":  "Yes",
+                            "ControlTower":  "Yes",
+                            "T2MKPKA":  "Yes",
+                            "ForkliftsInLogistics":  76,
+                            "HCForklifts":  213,
+                            "WifiState":  0,
+                            "Tablets":  85,
+                            "CountingDevices":  8
+                        },
+                        {
+                            "Country":  "Mexico",
+                            "Site":  "Site 07",
+                            "Cluster":  2,
+                            "CapacityMioHL":  4.77,
+                            "ProductionMioHL":  3.82,
+                            "DistributionVolumeKHL":  9900,
+                            "LineCapacity":  0.80083857442348017,
+                            "ProductionLines":  4,
+                            "Warehouses":  1,
+                            "WarehouseArea":  14897,
+                            "OccupationLV":  1.05,
+                            "AislesIdentification":  0,
+                            "BoxIdentification":  "No",
+                            "ControlTower":  "No",
+                            "T2MKPKA":  "Yes",
+                            "ForkliftsInLogistics":  32,
+                            "HCForklifts":  75,
+                            "WifiState":  0,
+                            "Tablets":  32,
+                            "CountingDevices":  6
+                        },
+                        {
+                            "Country":  "Colombia",
+                            "Site":  "Site 08",
+                            "Cluster":  1,
+                            "CapacityMioHL":  14.262347627,
+                            "ProductionMioHL":  14.221547376,
+                            "DistributionVolumeKHL":  11189,
+                            "LineCapacity":  0.997139303285333,
+                            "ProductionLines":  3,
+                            "Warehouses":  1,
+                            "WarehouseArea":  28576,
+                            "OccupationLV":  1.04,
+                            "AislesIdentification":  1,
+                            "BoxIdentification":  "Yes",
+                            "ControlTower":  "Yes",
+                            "T2MKPKA":  "Yes",
+                            "ForkliftsInLogistics":  32,
+                            "HCForklifts":  117,
+                            "WifiState":  1,
+                            "Tablets":  40,
+                            "CountingDevices":  5
+                        },
+                        {
+                            "Country":  "Colombia",
+                            "Site":  "Site 09",
+                            "Cluster":  2,
+                            "CapacityMioHL":  7.9588732209999993,
+                            "ProductionMioHL":  3.092881323,
+                            "DistributionVolumeKHL":  1822.303780952544,
+                            "LineCapacity":  0.388607939480583,
+                            "ProductionLines":  4,
+                            "Warehouses":  1,
+                            "WarehouseArea":  14097,
+                            "OccupationLV":  0.88,
+                            "AislesIdentification":  0.5,
+                            "BoxIdentification":  "Yes",
+                            "ControlTower":  "Yes",
+                            "T2MKPKA":  "Yes",
+                            "ForkliftsInLogistics":  10,
+                            "HCForklifts":  32,
+                            "WifiState":  0.7,
+                            "Tablets":  20,
+                            "CountingDevices":  4
+                        },
+                        {
+                            "Country":  "Colombia",
+                            "Site":  "Site 10",
+                            "Cluster":  1,
+                            "CapacityMioHL":  13.689520912,
+                            "ProductionMioHL":  10.31654573699999,
+                            "DistributionVolumeKHL":  11164.559621367751,
+                            "LineCapacity":  0.75360896873729821,
+                            "ProductionLines":  10,
+                            "Warehouses":  4,
+                            "WarehouseArea":  13978,
+                            "OccupationLV":  0.96,
+                            "AislesIdentification":  0.8,
+                            "BoxIdentification":  "No",
+                            "ControlTower":  "Yes",
+                            "T2MKPKA":  "Yes",
+                            "ForkliftsInLogistics":  62,
+                            "HCForklifts":  169,
+                            "WifiState":  0.5,
+                            "Tablets":  55,
+                            "CountingDevices":  7
+                        },
+                        {
+                            "Country":  "Colombia",
+                            "Site":  "Site 11",
+                            "Cluster":  3,
+                            "CapacityMioHL":  3.9803505460000008,
+                            "ProductionMioHL":  3.412261533,
+                            "DistributionVolumeKHL":  2911.32828241645,
+                            "LineCapacity":  0.85727663771451135,
+                            "ProductionLines":  4,
+                            "Warehouses":  3,
+                            "WarehouseArea":  4684,
+                            "OccupationLV":  0.84,
+                            "AislesIdentification":  0.8,
+                            "BoxIdentification":  "No",
+                            "ControlTower":  "No",
+                            "T2MKPKA":  "No",
+                            "ForkliftsInLogistics":  17,
+                            "HCForklifts":  42,
+                            "WifiState":  0.6,
+                            "Tablets":  16,
+                            "CountingDevices":  3
+                        },
+                        {
+                            "Country":  "Colombia",
+                            "Site":  "Site 12",
+                            "Cluster":  4,
+                            "CapacityMioHL":  2.168161207,
+                            "ProductionMioHL":  0.72307515399999989,
+                            "DistributionVolumeKHL":  699.07032063635688,
+                            "LineCapacity":  0.33349695200962048,
+                            "ProductionLines":  2,
+                            "Warehouses":  1,
+                            "WarehouseArea":  3797,
+                            "OccupationLV":  0.8,
+                            "AislesIdentification":  0.8,
+                            "BoxIdentification":  "No",
+                            "ControlTower":  "No",
+                            "T2MKPKA":  "No",
+                            "ForkliftsInLogistics":  4,
+                            "HCForklifts":  15,
+                            "WifiState":  0.7,
+                            "Tablets":  5,
+                            "CountingDevices":  3
+                        },
+                        {
+                            "Country":  "Colombia",
+                            "Site":  "Site 13",
+                            "Cluster":  1,
+                            "CapacityMioHL":  30.368177152999991,
+                            "ProductionMioHL":  20.955335884,
+                            "DistributionVolumeKHL":  23650.213350626869,
+                            "LineCapacity":  0.69004259881729113,
+                            "ProductionLines":  14,
+                            "Warehouses":  2,
+                            "WarehouseArea":  85322,
+                            "OccupationLV":  1.08,
+                            "AislesIdentification":  0.8,
+                            "BoxIdentification":  "Yes",
+                            "ControlTower":  "Yes",
+                            "T2MKPKA":  "Yes",
+                            "ForkliftsInLogistics":  100,
+                            "HCForklifts":  345,
+                            "WifiState":  0.6,
+                            "Tablets":  135,
+                            "CountingDevices":  15
+                        },
+                        {
+                            "Country":  "Colombia",
+                            "Site":  "Site 14",
+                            "Cluster":  1,
+                            "CapacityMioHL":  13.63726149800001,
+                            "ProductionMioHL":  10.618098853,
+                            "DistributionVolumeKHL":  11442.730605744509,
+                            "LineCapacity":  0.77860931643477016,
+                            "ProductionLines":  11,
+                            "Warehouses":  1,
+                            "WarehouseArea":  69016,
+                            "OccupationLV":  0.88,
+                            "AislesIdentification":  0.8,
+                            "BoxIdentification":  "No",
+                            "ControlTower":  "Yes",
+                            "T2MKPKA":  "No",
+                            "ForkliftsInLogistics":  52,
+                            "HCForklifts":  166,
+                            "WifiState":  0.5,
+                            "Tablets":  60,
+                            "CountingDevices":  6
+                        },
+                        {
+                            "Country":  "Colombia",
+                            "Site":  "Site 15",
+                            "Cluster":  2,
+                            "CapacityMioHL":  5.002799635,
+                            "ProductionMioHL":  4.509029219,
+                            "DistributionVolumeKHL":  4946.4670233488687,
+                            "LineCapacity":  0.90130118093366351,
+                            "ProductionLines":  5,
+                            "Warehouses":  3,
+                            "WarehouseArea":  9601,
+                            "OccupationLV":  1.05,
+                            "AislesIdentification":  0.6,
+                            "BoxIdentification":  "No",
+                            "ControlTower":  "Yes",
+                            "T2MKPKA":  "No",
+                            "ForkliftsInLogistics":  19,
+                            "HCForklifts":  54,
+                            "WifiState":  0.7,
+                            "Tablets":  18,
+                            "CountingDevices":  4
+                        }
+                    ],
+    "financials":  [
+                       {
+                           "Country":  "Mexico",
+                           "Site":  "Site 01",
+                           "BenefitsPerMonth":  18511,
+                           "ImplementationCosts":  15000,
+                           "Devices":  0,
+                           "ForkliftStructure":  6668.7957000000006,
+                           "WarehouseSignage":  11370.37131230926,
+                           "Labels":  14425.153367243131,
+                           "CostsWithoutLabelersWifi":  47464.320379552395,
+                           "LabelPrintersLabelers":  7144.760000000002,
+                           "ManualLabeling":  0,
+                           "WifiFull":  44451,
+                           "WifiFullOptimized":  43451,
+                           "WifiPrioritized":  0
+                       },
+                       {
+                           "Country":  "Mexico",
+                           "Site":  "Site 02",
+                           "BenefitsPerMonth":  26878,
+                           "ImplementationCosts":  15000,
+                           "Devices":  70212.869047619053,
+                           "ForkliftStructure":  9262.21625,
+                           "WarehouseSignage":  27796.937955834379,
+                           "Labels":  21152.791810293478,
+                           "CostsWithoutLabelersWifi":  143424.81506374691,
+                           "LabelPrintersLabelers":  81930.072,
+                           "ManualLabeling":  142702.70270270269,
+                           "WifiFull":  287249,
+                           "WifiFullOptimized":  220687,
+                           "WifiPrioritized":  110343.5
+                       },
+                       {
+                           "Country":  "Mexico",
+                           "Site":  "Site 03",
+                           "BenefitsPerMonth":  61087,
+                           "ImplementationCosts":  25000,
+                           "Devices":  84255.442857142858,
+                           "ForkliftStructure":  11114.6595,
+                           "WarehouseSignage":  23591.833206203912,
+                           "Labels":  18886.421259190611,
+                           "CostsWithoutLabelersWifi":  162848.35682253737,
+                           "LabelPrintersLabelers":  212307.9,
+                           "ManualLabeling":  259459.4594594595,
+                           "WifiFull":  378909,
+                           "WifiFullOptimized":  157740,
+                           "WifiPrioritized":  112671.42857142859
+                       },
+                       {
+                           "Country":  "Mexico",
+                           "Site":  "Site 04",
+                           "BenefitsPerMonth":  70898,
+                           "ImplementationCosts":  25000,
+                           "Devices":  103915.04619047621,
+                           "ForkliftStructure":  13708.08005,
+                           "WarehouseSignage":  44202.766336130182,
+                           "Labels":  19286.81338988545,
+                           "CostsWithoutLabelersWifi":  206112.70596649183,
+                           "LabelPrintersLabelers":  184000.18,
+                           "ManualLabeling":  220540.5405405405,
+                           "WifiFull":  411279,
+                           "WifiFullOptimized":  368914,
+                           "WifiPrioritized":  230571.25
+                       },
+                       {
+                           "Country":  "Mexico",
+                           "Site":  "Site 05",
+                           "BenefitsPerMonth":  14809,
+                           "ImplementationCosts":  15000,
+                           "Devices":  0,
+                           "ForkliftStructure":  5927.8184,
+                           "WarehouseSignage":  10505.161454360539,
+                           "Labels":  11709.58118069818,
+                           "CostsWithoutLabelersWifi":  43142.561035058723,
+                           "LabelPrintersLabelers":  73600.071999999986,
+                           "ManualLabeling":  103783.7837837838,
+                           "WifiFull":  219880,
+                           "WifiFullOptimized":  206497,
+                           "WifiPrioritized":  77436.375
+                       },
+                       {
+                           "Country":  "Mexico",
+                           "Site":  "Site 06",
+                           "BenefitsPerMonth":  76636,
+                           "ImplementationCosts":  35000,
+                           "Devices":  213447.12190476191,
+                           "ForkliftStructure":  28157.1374,
+                           "WarehouseSignage":  43677.87583195186,
+                           "Labels":  49482.423699079387,
+                           "CostsWithoutLabelersWifi":  369764.55883579311,
+                           "LabelPrintersLabelers":  302730.288,
+                           "ManualLabeling":  376216.21621621621,
+                           "WifiFull":  523835,
+                           "WifiFullOptimized":  297466,
+                           "WifiPrioritized":  220345.1851851852
+                       },
+                       {
+                           "Country":  "Mexico",
+                           "Site":  "Site 07",
+                           "BenefitsPerMonth":  30543,
+                           "ImplementationCosts":  25000,
+                           "Devices":  98298.016666666677,
+                           "ForkliftStructure":  12967.10275,
+                           "WarehouseSignage":  39945.634375794558,
+                           "Labels":  13220.49488143342,
+                           "CostsWithoutLabelersWifi":  189431.24867389468,
+                           "LabelPrintersLabelers":  147200.144,
+                           "ManualLabeling":  181621.6216216216,
+                           "WifiFull":  277152,
+                           "WifiFullOptimized":  123137,
+                           "WifiPrioritized":  94720.769230769234
+                       },
+                       {
+                           "Country":  "Colombia",
+                           "Site":  "Site 08",
+                           "BenefitsPerMonth":  70420,
+                           "ImplementationCosts":  50000,
+                           "Devices":  0,
+                           "ForkliftStructure":  0,
+                           "WarehouseSignage":  0,
+                           "Labels":  0,
+                           "CostsWithoutLabelersWifi":  50000,
+                           "LabelPrintersLabelers":  0,
+                           "ManualLabeling":  0,
+                           "WifiFull":  0,
+                           "WifiFullOptimized":  0,
+                           "WifiPrioritized":  0
+                       },
+                       {
+                           "Country":  "Colombia",
+                           "Site":  "Site 09",
+                           "BenefitsPerMonth":  15920,
+                           "ImplementationCosts":  15000,
+                           "Devices":  0,
+                           "ForkliftStructure":  3600,
+                           "WarehouseSignage":  12547,
+                           "Labels":  3600,
+                           "CostsWithoutLabelersWifi":  34747,
+                           "LabelPrintersLabelers":  0,
+                           "ManualLabeling":  0,
+                           "WifiFull":  133781,
+                           "WifiFullOptimized":  115803,
+                           "WifiPrioritized":  100862
+                       },
+                       {
+                           "Country":  "Colombia",
+                           "Site":  "Site 10",
+                           "BenefitsPerMonth":  90320,
+                           "ImplementationCosts":  25000,
+                           "Devices":  0,
+                           "ForkliftStructure":  15600,
+                           "WarehouseSignage":  57883,
+                           "Labels":  8100,
+                           "CostsWithoutLabelersWifi":  106583,
+                           "LabelPrintersLabelers":  308459.675475,
+                           "ManualLabeling":  0,
+                           "WifiFull":  487872,
+                           "WifiFullOptimized":  364795,
+                           "WifiPrioritized":  154945.83496052149
+                       },
+                       {
+                           "Country":  "Colombia",
+                           "Site":  "Site 11",
+                           "BenefitsPerMonth":  24480,
+                           "ImplementationCosts":  15000,
+                           "Devices":  0,
+                           "ForkliftStructure":  5560,
+                           "WarehouseSignage":  15273,
+                           "Labels":  4500,
+                           "CostsWithoutLabelersWifi":  40333,
+                           "LabelPrintersLabelers":  176263,
+                           "ManualLabeling":  0,
+                           "WifiFull":  180753,
+                           "WifiFullOptimized":  185549,
+                           "WifiPrioritized":  94573.81180473353
+                       },
+                       {
+                           "Country":  "Colombia",
+                           "Site":  "Site 12",
+                           "BenefitsPerMonth":  10180,
+                           "ImplementationCosts":  5000,
+                           "Devices":  0,
+                           "ForkliftStructure":  1440,
+                           "WarehouseSignage":  3746,
+                           "Labels":  1800,
+                           "CostsWithoutLabelersWifi":  11986,
+                           "LabelPrintersLabelers":  88131,
+                           "ManualLabeling":  0,
+                           "WifiFull":  116598,
+                           "WifiFullOptimized":  73392,
+                           "WifiPrioritized":  43642.31584092883
+                       },
+                       {
+                           "Country":  "Colombia",
+                           "Site":  "Site 13",
+                           "BenefitsPerMonth":  109140,
+                           "ImplementationCosts":  50000,
+                           "Devices":  369489,
+                           "ForkliftStructure":  44000,
+                           "WarehouseSignage":  73532,
+                           "Labels":  20700,
+                           "CostsWithoutLabelersWifi":  557721,
+                           "LabelPrintersLabelers":  1189773,
+                           "ManualLabeling":  0,
+                           "WifiFull":  333663,
+                           "WifiFullOptimized":  267903,
+                           "WifiPrioritized":  136549.4176951831
+                       },
+                       {
+                           "Country":  "Colombia",
+                           "Site":  "Site 14",
+                           "BenefitsPerMonth":  56820,
+                           "ImplementationCosts":  35000,
+                           "Devices":  0,
+                           "ForkliftStructure":  18560,
+                           "WarehouseSignage":  58580,
+                           "Labels":  9000,
+                           "CostsWithoutLabelersWifi":  121140,
+                           "LabelPrintersLabelers":  925379,
+                           "ManualLabeling":  0,
+                           "WifiFull":  319639,
+                           "WifiFullOptimized":  286043,
+                           "WifiPrioritized":  121496.1045782219
+                       },
+                       {
+                           "Country":  "Colombia",
+                           "Site":  "Site 15",
+                           "BenefitsPerMonth":  27560,
+                           "ImplementationCosts":  15000,
+                           "Devices":  0,
+                           "ForkliftStructure":  5320,
+                           "WarehouseSignage":  20351,
+                           "Labels":  3600,
+                           "CostsWithoutLabelersWifi":  44271,
+                           "LabelPrintersLabelers":  88131,
+                           "ManualLabeling":  0,
+                           "WifiFull":  139767,
+                           "WifiFullOptimized":  134417,
+                           "WifiPrioritized":  79930.6350609076
+                       }
+                   ],
+    "resourceMaster":  [
+                           {
+                               "Role":  "Solution Architect",
+                               "WorkMode":  "Remote",
+                               "CanMultitask":  "Yes",
+                               "InternalOrExternal":  "Internal",
+                               "FixedOrFlexibleCost":  "Fixed",
+                               "AvgMonthlyCostMXN":  36000,
+                               "Actual":  1,
+                               "Escenario1":  5
+                           },
+                           {
+                               "Role":  "Warehouse Manager Org A",
+                               "WorkMode":  "Hybrid",
+                               "CanMultitask":  "Yes",
+                               "InternalOrExternal":  "Internal",
+                               "FixedOrFlexibleCost":  "Fixed",
+                               "AvgMonthlyCostMXN":  35000,
+                               "Actual":  1,
+                               "Escenario1":  5
+                           },
+                           {
+                               "Role":  "Project Manager Country B",
+                               "WorkMode":  "Hybrid",
+                               "CanMultitask":  "Partial",
+                               "InternalOrExternal":  "Internal",
+                               "FixedOrFlexibleCost":  "Fixed",
+                               "AvgMonthlyCostMXN":  25000,
+                               "Actual":  1,
+                               "Escenario1":  5
+                           },
+                           {
+                               "Role":  "Project Manager Country A",
+                               "WorkMode":  "Hybrid",
+                               "CanMultitask":  "Partial",
+                               "InternalOrExternal":  "Internal",
+                               "FixedOrFlexibleCost":  "Fixed",
+                               "AvgMonthlyCostMXN":  25000,
+                               "Actual":  1,
+                               "Escenario1":  5
+                           },
+                           {
+                               "Role":  "Change Management Lead",
+                               "WorkMode":  "Onsite",
+                               "CanMultitask":  "No",
+                               "InternalOrExternal":  "Internal",
+                               "FixedOrFlexibleCost":  "Fixed",
+                               "AvgMonthlyCostMXN":  16000,
+                               "Actual":  1,
+                               "Escenario1":  5
+                           },
+                           {
+                               "Role":  "Change Management Lead",
+                               "WorkMode":  "Onsite",
+                               "CanMultitask":  "No",
+                               "InternalOrExternal":  "External",
+                               "FixedOrFlexibleCost":  "Fixed",
+                               "AvgMonthlyCostMXN":  16000,
+                               "Actual":  1,
+                               "Escenario1":  5
+                           },
+                           {
+                               "Role":  "Infrastructure Lead",
+                               "WorkMode":  "Onsite",
+                               "CanMultitask":  "No",
+                               "InternalOrExternal":  "Internal",
+                               "FixedOrFlexibleCost":  "Fixed",
+                               "AvgMonthlyCostMXN":  42000,
+                               "Actual":  1,
+                               "Escenario1":  5
+                           },
+                           {
+                               "Role":  "Infrastructure Lead",
+                               "WorkMode":  "Onsite",
+                               "CanMultitask":  "No",
+                               "InternalOrExternal":  "External",
+                               "FixedOrFlexibleCost":  "Flexible",
+                               "AvgMonthlyCostMXN":  43000,
+                               "Actual":  1,
+                               "Escenario1":  5
+                           },
+                           {
+                               "Role":  "Functional Lead",
+                               "WorkMode":  "Onsite",
+                               "CanMultitask":  "No",
+                               "InternalOrExternal":  "Internal",
+                               "FixedOrFlexibleCost":  "Fixed",
+                               "AvgMonthlyCostMXN":  35000,
+                               "Actual":  1,
+                               "Escenario1":  5
+                           },
+                           {
+                               "Role":  "Functional Lead",
+                               "WorkMode":  "Onsite",
+                               "CanMultitask":  "No",
+                               "InternalOrExternal":  "External",
+                               "FixedOrFlexibleCost":  "Flexible",
+                               "AvgMonthlyCostMXN":  35000,
+                               "Actual":  1,
+                               "Escenario1":  5
+                           },
+                           {
+                               "Role":  "SAP Integrations Lead",
+                               "WorkMode":  "Remote",
+                               "CanMultitask":  "Yes",
+                               "InternalOrExternal":  "Internal",
+                               "FixedOrFlexibleCost":  "Fixed",
+                               "AvgMonthlyCostMXN":  62000,
+                               "Actual":  1,
+                               "Escenario1":  5
+                           },
+                           {
+                               "Role":  "SAP Integrations Specialist",
+                               "WorkMode":  "Remote",
+                               "CanMultitask":  "Yes",
+                               "InternalOrExternal":  "Internal",
+                               "FixedOrFlexibleCost":  "Flexible",
+                               "AvgMonthlyCostMXN":  55000,
+                               "Actual":  1,
+                               "Escenario1":  5
+                           },
+                           {
+                               "Role":  "Azure Lead",
+                               "WorkMode":  "Remote",
+                               "CanMultitask":  "Yes",
+                               "InternalOrExternal":  "Internal",
+                               "FixedOrFlexibleCost":  "Fixed",
+                               "AvgMonthlyCostMXN":  48000,
+                               "Actual":  1,
+                               "Escenario1":  5
+                           },
+                           {
+                               "Role":  "Azure Specialist",
+                               "WorkMode":  "Remote",
+                               "CanMultitask":  "Yes",
+                               "InternalOrExternal":  "Internal",
+                               "FixedOrFlexibleCost":  "Flexible",
+                               "AvgMonthlyCostMXN":  45000,
+                               "Actual":  1,
+                               "Escenario1":  5
+                           },
+                           {
+                               "Role":  "Testing Lead",
+                               "WorkMode":  "Remote",
+                               "CanMultitask":  "Partial",
+                               "InternalOrExternal":  "Internal",
+                               "FixedOrFlexibleCost":  "Flexible",
+                               "AvgMonthlyCostMXN":  35000,
+                               "Actual":  1,
+                               "Escenario1":  5
+                           },
+                           {
+                               "Role":  "Trainers",
+                               "WorkMode":  "Onsite",
+                               "CanMultitask":  "No",
+                               "InternalOrExternal":  "External",
+                               "FixedOrFlexibleCost":  "Flexible",
+                               "AvgMonthlyCostMXN":  28000,
+                               "Actual":  1,
+                               "Escenario1":  5
+                           },
+                           {
+                               "Role":  "Functional Lead Vendor A",
+                               "WorkMode":  "Remote",
+                               "CanMultitask":  "Yes",
+                               "InternalOrExternal":  "External",
+                               "FixedOrFlexibleCost":  "Flexible",
+                               "AvgMonthlyCostMXN":  36000,
+                               "Actual":  2,
+                               "Escenario1":  5
+                           },
+                           {
+                               "Role":  "Support Lead",
+                               "WorkMode":  "Remote",
+                               "CanMultitask":  "Yes",
+                               "InternalOrExternal":  "External",
+                               "FixedOrFlexibleCost":  "Flexible",
+                               "AvgMonthlyCostMXN":  22000,
+                               "Actual":  2,
+                               "Escenario1":  5
+                           }
+                       ],
+    "implementationPhases":  [
+                                 {
+                                     "Cluster":  1,
+                                     "Phase":  "Site Readiness",
+                                     "Sequence":  1,
+                                     "DeploymentMaturity":  "A",
+                                     "DurationWeeks":  5
+                                 },
+                                 {
+                                     "Cluster":  1,
+                                     "Phase":  "Design Adaptation",
+                                     "Sequence":  2,
+                                     "DeploymentMaturity":  "A",
+                                     "DurationWeeks":  2
+                                 },
+                                 {
+                                     "Cluster":  1,
+                                     "Phase":  "Functional Review",
+                                     "Sequence":  3,
+                                     "DeploymentMaturity":  "A",
+                                     "DurationWeeks":  1
+                                 },
+                                 {
+                                     "Cluster":  1,
+                                     "Phase":  "UAT",
+                                     "Sequence":  4,
+                                     "DeploymentMaturity":  "A",
+                                     "DurationWeeks":  2
+                                 },
+                                 {
+                                     "Cluster":  1,
+                                     "Phase":  "Training",
+                                     "Sequence":  5,
+                                     "DeploymentMaturity":  "A",
+                                     "DurationWeeks":  3
+                                 },
+                                 {
+                                     "Cluster":  1,
+                                     "Phase":  "DIALT",
+                                     "Sequence":  6,
+                                     "DeploymentMaturity":  "A",
+                                     "DurationWeeks":  1
+                                 },
+                                 {
+                                     "Cluster":  1,
+                                     "Phase":  "Go Live",
+                                     "Sequence":  7,
+                                     "DeploymentMaturity":  "A",
+                                     "DurationWeeks":  1
+                                 },
+                                 {
+                                     "Cluster":  1,
+                                     "Phase":  "Hypercare",
+                                     "Sequence":  8,
+                                     "DeploymentMaturity":  "A",
+                                     "DurationWeeks":  4
+                                 },
+                                 {
+                                     "Cluster":  2,
+                                     "Phase":  "Site Readiness",
+                                     "Sequence":  1,
+                                     "DeploymentMaturity":  "A",
+                                     "DurationWeeks":  4
+                                 },
+                                 {
+                                     "Cluster":  2,
+                                     "Phase":  "Design Adaptation",
+                                     "Sequence":  2,
+                                     "DeploymentMaturity":  "A",
+                                     "DurationWeeks":  1
+                                 },
+                                 {
+                                     "Cluster":  2,
+                                     "Phase":  "Functional Review",
+                                     "Sequence":  3,
+                                     "DeploymentMaturity":  "A",
+                                     "DurationWeeks":  1
+                                 },
+                                 {
+                                     "Cluster":  2,
+                                     "Phase":  "UAT",
+                                     "Sequence":  4,
+                                     "DeploymentMaturity":  "A",
+                                     "DurationWeeks":  2
+                                 },
+                                 {
+                                     "Cluster":  2,
+                                     "Phase":  "Training",
+                                     "Sequence":  5,
+                                     "DeploymentMaturity":  "A",
+                                     "DurationWeeks":  2
+                                 },
+                                 {
+                                     "Cluster":  2,
+                                     "Phase":  "DIALT",
+                                     "Sequence":  6,
+                                     "DeploymentMaturity":  "A",
+                                     "DurationWeeks":  1
+                                 },
+                                 {
+                                     "Cluster":  2,
+                                     "Phase":  "Go Live",
+                                     "Sequence":  7,
+                                     "DeploymentMaturity":  "A",
+                                     "DurationWeeks":  1
+                                 },
+                                 {
+                                     "Cluster":  2,
+                                     "Phase":  "Hypercare",
+                                     "Sequence":  8,
+                                     "DeploymentMaturity":  "A",
+                                     "DurationWeeks":  4
+                                 },
+                                 {
+                                     "Cluster":  3,
+                                     "Phase":  "Site Readiness",
+                                     "Sequence":  1,
+                                     "DeploymentMaturity":  "A",
+                                     "DurationWeeks":  4
+                                 },
+                                 {
+                                     "Cluster":  3,
+                                     "Phase":  "Design Adaptation",
+                                     "Sequence":  2,
+                                     "DeploymentMaturity":  "A",
+                                     "DurationWeeks":  1
+                                 },
+                                 {
+                                     "Cluster":  3,
+                                     "Phase":  "Functional Review",
+                                     "Sequence":  3,
+                                     "DeploymentMaturity":  "A",
+                                     "DurationWeeks":  1
+                                 },
+                                 {
+                                     "Cluster":  3,
+                                     "Phase":  "UAT",
+                                     "Sequence":  4,
+                                     "DeploymentMaturity":  "A",
+                                     "DurationWeeks":  1
+                                 },
+                                 {
+                                     "Cluster":  3,
+                                     "Phase":  "Training",
+                                     "Sequence":  5,
+                                     "DeploymentMaturity":  "A",
+                                     "DurationWeeks":  2
+                                 },
+                                 {
+                                     "Cluster":  3,
+                                     "Phase":  "DIALT",
+                                     "Sequence":  6,
+                                     "DeploymentMaturity":  "A",
+                                     "DurationWeeks":  1
+                                 },
+                                 {
+                                     "Cluster":  3,
+                                     "Phase":  "Go Live",
+                                     "Sequence":  7,
+                                     "DeploymentMaturity":  "A",
+                                     "DurationWeeks":  1
+                                 },
+                                 {
+                                     "Cluster":  3,
+                                     "Phase":  "Hypercare",
+                                     "Sequence":  8,
+                                     "DeploymentMaturity":  "A",
+                                     "DurationWeeks":  4
+                                 },
+                                 {
+                                     "Cluster":  4,
+                                     "Phase":  "Site Readiness",
+                                     "Sequence":  1,
+                                     "DeploymentMaturity":  "A",
+                                     "DurationWeeks":  2
+                                 },
+                                 {
+                                     "Cluster":  4,
+                                     "Phase":  "Design Adaptation",
+                                     "Sequence":  2,
+                                     "DeploymentMaturity":  "A",
+                                     "DurationWeeks":  0
+                                 },
+                                 {
+                                     "Cluster":  4,
+                                     "Phase":  "Functional Review",
+                                     "Sequence":  3,
+                                     "DeploymentMaturity":  "A",
+                                     "DurationWeeks":  1
+                                 },
+                                 {
+                                     "Cluster":  4,
+                                     "Phase":  "UAT",
+                                     "Sequence":  4,
+                                     "DeploymentMaturity":  "A",
+                                     "DurationWeeks":  1
+                                 },
+                                 {
+                                     "Cluster":  4,
+                                     "Phase":  "Training",
+                                     "Sequence":  5,
+                                     "DeploymentMaturity":  "A",
+                                     "DurationWeeks":  1
+                                 },
+                                 {
+                                     "Cluster":  4,
+                                     "Phase":  "DIALT",
+                                     "Sequence":  6,
+                                     "DeploymentMaturity":  "A",
+                                     "DurationWeeks":  1
+                                 },
+                                 {
+                                     "Cluster":  4,
+                                     "Phase":  "Go Live",
+                                     "Sequence":  7,
+                                     "DeploymentMaturity":  "A",
+                                     "DurationWeeks":  1
+                                 },
+                                 {
+                                     "Cluster":  4,
+                                     "Phase":  "Hypercare",
+                                     "Sequence":  8,
+                                     "DeploymentMaturity":  "A",
+                                     "DurationWeeks":  3
+                                 },
+                                 {
+                                     "Cluster":  1,
+                                     "Phase":  "Site Readiness",
+                                     "Sequence":  1,
+                                     "DeploymentMaturity":  "B",
+                                     "DurationWeeks":  4
+                                 },
+                                 {
+                                     "Cluster":  1,
+                                     "Phase":  "Design Adaptation",
+                                     "Sequence":  2,
+                                     "DeploymentMaturity":  "B",
+                                     "DurationWeeks":  1
+                                 },
+                                 {
+                                     "Cluster":  1,
+                                     "Phase":  "Functional Review",
+                                     "Sequence":  3,
+                                     "DeploymentMaturity":  "B",
+                                     "DurationWeeks":  1
+                                 },
+                                 {
+                                     "Cluster":  1,
+                                     "Phase":  "UAT",
+                                     "Sequence":  4,
+                                     "DeploymentMaturity":  "B",
+                                     "DurationWeeks":  1
+                                 },
+                                 {
+                                     "Cluster":  1,
+                                     "Phase":  "Training",
+                                     "Sequence":  5,
+                                     "DeploymentMaturity":  "B",
+                                     "DurationWeeks":  2
+                                 },
+                                 {
+                                     "Cluster":  1,
+                                     "Phase":  "DIALT",
+                                     "Sequence":  6,
+                                     "DeploymentMaturity":  "B",
+                                     "DurationWeeks":  1
+                                 },
+                                 {
+                                     "Cluster":  1,
+                                     "Phase":  "Go Live",
+                                     "Sequence":  7,
+                                     "DeploymentMaturity":  "B",
+                                     "DurationWeeks":  1
+                                 },
+                                 {
+                                     "Cluster":  1,
+                                     "Phase":  "Hypercare",
+                                     "Sequence":  8,
+                                     "DeploymentMaturity":  "B",
+                                     "DurationWeeks":  4
+                                 },
+                                 {
+                                     "Cluster":  2,
+                                     "Phase":  "Site Readiness",
+                                     "Sequence":  1,
+                                     "DeploymentMaturity":  "B",
+                                     "DurationWeeks":  4
+                                 },
+                                 {
+                                     "Cluster":  2,
+                                     "Phase":  "Design Adaptation",
+                                     "Sequence":  2,
+                                     "DeploymentMaturity":  "B",
+                                     "DurationWeeks":  1
+                                 },
+                                 {
+                                     "Cluster":  2,
+                                     "Phase":  "Functional Review",
+                                     "Sequence":  3,
+                                     "DeploymentMaturity":  "B",
+                                     "DurationWeeks":  1
+                                 },
+                                 {
+                                     "Cluster":  2,
+                                     "Phase":  "UAT",
+                                     "Sequence":  4,
+                                     "DeploymentMaturity":  "B",
+                                     "DurationWeeks":  1
+                                 },
+                                 {
+                                     "Cluster":  2,
+                                     "Phase":  "Training",
+                                     "Sequence":  5,
+                                     "DeploymentMaturity":  "B",
+                                     "DurationWeeks":  2
+                                 },
+                                 {
+                                     "Cluster":  2,
+                                     "Phase":  "DIALT",
+                                     "Sequence":  6,
+                                     "DeploymentMaturity":  "B",
+                                     "DurationWeeks":  1
+                                 },
+                                 {
+                                     "Cluster":  2,
+                                     "Phase":  "Go Live",
+                                     "Sequence":  7,
+                                     "DeploymentMaturity":  "B",
+                                     "DurationWeeks":  1
+                                 },
+                                 {
+                                     "Cluster":  2,
+                                     "Phase":  "Hypercare",
+                                     "Sequence":  8,
+                                     "DeploymentMaturity":  "B",
+                                     "DurationWeeks":  4
+                                 },
+                                 {
+                                     "Cluster":  3,
+                                     "Phase":  "Site Readiness",
+                                     "Sequence":  1,
+                                     "DeploymentMaturity":  "B",
+                                     "DurationWeeks":  4
+                                 },
+                                 {
+                                     "Cluster":  3,
+                                     "Phase":  "Design Adaptation",
+                                     "Sequence":  2,
+                                     "DeploymentMaturity":  "B",
+                                     "DurationWeeks":  1
+                                 },
+                                 {
+                                     "Cluster":  3,
+                                     "Phase":  "Functional Review",
+                                     "Sequence":  3,
+                                     "DeploymentMaturity":  "B",
+                                     "DurationWeeks":  1
+                                 },
+                                 {
+                                     "Cluster":  3,
+                                     "Phase":  "UAT",
+                                     "Sequence":  4,
+                                     "DeploymentMaturity":  "B",
+                                     "DurationWeeks":  1
+                                 },
+                                 {
+                                     "Cluster":  3,
+                                     "Phase":  "Training",
+                                     "Sequence":  5,
+                                     "DeploymentMaturity":  "B",
+                                     "DurationWeeks":  2
+                                 },
+                                 {
+                                     "Cluster":  3,
+                                     "Phase":  "DIALT",
+                                     "Sequence":  6,
+                                     "DeploymentMaturity":  "B",
+                                     "DurationWeeks":  1
+                                 },
+                                 {
+                                     "Cluster":  3,
+                                     "Phase":  "Go Live",
+                                     "Sequence":  7,
+                                     "DeploymentMaturity":  "B",
+                                     "DurationWeeks":  1
+                                 },
+                                 {
+                                     "Cluster":  3,
+                                     "Phase":  "Hypercare",
+                                     "Sequence":  8,
+                                     "DeploymentMaturity":  "B",
+                                     "DurationWeeks":  4
+                                 },
+                                 {
+                                     "Cluster":  4,
+                                     "Phase":  "Site Readiness",
+                                     "Sequence":  1,
+                                     "DeploymentMaturity":  "B",
+                                     "DurationWeeks":  2
+                                 },
+                                 {
+                                     "Cluster":  4,
+                                     "Phase":  "Design Adaptation",
+                                     "Sequence":  2,
+                                     "DeploymentMaturity":  "B",
+                                     "DurationWeeks":  0
+                                 },
+                                 {
+                                     "Cluster":  4,
+                                     "Phase":  "Functional Review",
+                                     "Sequence":  3,
+                                     "DeploymentMaturity":  "B",
+                                     "DurationWeeks":  1
+                                 },
+                                 {
+                                     "Cluster":  4,
+                                     "Phase":  "UAT",
+                                     "Sequence":  4,
+                                     "DeploymentMaturity":  "B",
+                                     "DurationWeeks":  1
+                                 },
+                                 {
+                                     "Cluster":  4,
+                                     "Phase":  "Training",
+                                     "Sequence":  5,
+                                     "DeploymentMaturity":  "B",
+                                     "DurationWeeks":  1
+                                 },
+                                 {
+                                     "Cluster":  4,
+                                     "Phase":  "DIALT",
+                                     "Sequence":  6,
+                                     "DeploymentMaturity":  "B",
+                                     "DurationWeeks":  1
+                                 },
+                                 {
+                                     "Cluster":  4,
+                                     "Phase":  "Go Live",
+                                     "Sequence":  7,
+                                     "DeploymentMaturity":  "B",
+                                     "DurationWeeks":  1
+                                 },
+                                 {
+                                     "Cluster":  4,
+                                     "Phase":  "Hypercare",
+                                     "Sequence":  8,
+                                     "DeploymentMaturity":  "B",
+                                     "DurationWeeks":  3
+                                 }
+                             ],
+    "phaseResourceAllocation":  [
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Site Readiness",
+                                        "Role":  "Infrastructure Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Site Readiness",
+                                        "Role":  "SAP Integrations Lead",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Design Adaptation",
+                                        "Role":  "Solution Architect",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Design Adaptation",
+                                        "Role":  "SAP Integrations Lead",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Design Adaptation",
+                                        "Role":  "SAP Integrations Specialist",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Design Adaptation",
+                                        "Role":  "Azure Lead",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Design Adaptation",
+                                        "Role":  "Azure Specialist",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Design Adaptation",
+                                        "Role":  "Testing Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Design Adaptation",
+                                        "Role":  "Functional Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Design Adaptation",
+                                        "Role":  "Trainers",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Design Adaptation",
+                                        "Role":  "Infrastructure Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Design Adaptation",
+                                        "Role":  "Functional Lead Vendor A",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Functional Review",
+                                        "Role":  "Solution Architect",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Functional Review",
+                                        "Role":  "Change Management Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Functional Review",
+                                        "Role":  "SAP Integrations Lead",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Functional Review",
+                                        "Role":  "SAP Integrations Specialist",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Functional Review",
+                                        "Role":  "Azure Lead",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Functional Review",
+                                        "Role":  "Azure Specialist",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Functional Review",
+                                        "Role":  "Testing Lead",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Functional Review",
+                                        "Role":  "Functional Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Functional Review",
+                                        "Role":  "Trainers",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "UAT",
+                                        "Role":  "Solution Architect",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "UAT",
+                                        "Role":  "Change Management Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "UAT",
+                                        "Role":  "SAP Integrations Lead",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "UAT",
+                                        "Role":  "SAP Integrations Specialist",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "UAT",
+                                        "Role":  "Azure Lead",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "UAT",
+                                        "Role":  "Azure Specialist",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "UAT",
+                                        "Role":  "Testing Lead",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "UAT",
+                                        "Role":  "Functional Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "UAT",
+                                        "Role":  "Trainers",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Training",
+                                        "Role":  "Change Management Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Training",
+                                        "Role":  "Trainers",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "DIALT",
+                                        "Role":  "Solution Architect",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "DIALT",
+                                        "Role":  "Change Management Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "DIALT",
+                                        "Role":  "Azure Lead",
+                                        "CapacityConsumption":  0.75
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "DIALT",
+                                        "Role":  "Azure Specialist",
+                                        "CapacityConsumption":  0.75
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "DIALT",
+                                        "Role":  "Functional Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "DIALT",
+                                        "Role":  "Trainers",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "DIALT",
+                                        "Role":  "Functional Lead Vendor A",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Go Live",
+                                        "Role":  "Solution Architect",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Go Live",
+                                        "Role":  "Change Management Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Go Live",
+                                        "Role":  "SAP Integrations Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Go Live",
+                                        "Role":  "SAP Integrations Specialist",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Go Live",
+                                        "Role":  "Azure Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Go Live",
+                                        "Role":  "Azure Specialist",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Go Live",
+                                        "Role":  "Functional Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Go Live",
+                                        "Role":  "Trainers",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Go Live",
+                                        "Role":  "Infrastructure Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Go Live",
+                                        "Role":  "Functional Lead Vendor A",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Hypercare",
+                                        "Role":  "Solution Architect",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Hypercare",
+                                        "Role":  "Change Management Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Hypercare",
+                                        "Role":  "SAP Integrations Lead",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Hypercare",
+                                        "Role":  "SAP Integrations Specialist",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Hypercare",
+                                        "Role":  "Azure Lead",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Hypercare",
+                                        "Role":  "Azure Specialist",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Hypercare",
+                                        "Role":  "Functional Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Hypercare",
+                                        "Role":  "Functional Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Hypercare",
+                                        "Role":  "Trainers",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Hypercare",
+                                        "Role":  "Trainers",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Hypercare",
+                                        "Role":  "Trainers",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Hypercare",
+                                        "Role":  "Infrastructure Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  1,
+                                        "Phase":  "Hypercare",
+                                        "Role":  "Functional Lead Vendor A",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Site Readiness",
+                                        "Role":  "Infrastructure Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Site Readiness",
+                                        "Role":  "SAP Integrations Lead",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Design Adaptation",
+                                        "Role":  "Solution Architect",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Design Adaptation",
+                                        "Role":  "SAP Integrations Lead",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Design Adaptation",
+                                        "Role":  "SAP Integrations Specialist",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Design Adaptation",
+                                        "Role":  "Azure Lead",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Design Adaptation",
+                                        "Role":  "Azure Specialist",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Design Adaptation",
+                                        "Role":  "Testing Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Design Adaptation",
+                                        "Role":  "Functional Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Design Adaptation",
+                                        "Role":  "Trainers",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Design Adaptation",
+                                        "Role":  "Infrastructure Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Design Adaptation",
+                                        "Role":  "Functional Lead Vendor A",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Functional Review",
+                                        "Role":  "Solution Architect",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Functional Review",
+                                        "Role":  "Change Management Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Functional Review",
+                                        "Role":  "SAP Integrations Lead",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Functional Review",
+                                        "Role":  "SAP Integrations Specialist",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Functional Review",
+                                        "Role":  "Azure Lead",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Functional Review",
+                                        "Role":  "Azure Specialist",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Functional Review",
+                                        "Role":  "Testing Lead",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Functional Review",
+                                        "Role":  "Functional Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Functional Review",
+                                        "Role":  "Trainers",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "UAT",
+                                        "Role":  "Solution Architect",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "UAT",
+                                        "Role":  "Change Management Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "UAT",
+                                        "Role":  "SAP Integrations Lead",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "UAT",
+                                        "Role":  "SAP Integrations Specialist",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "UAT",
+                                        "Role":  "Azure Lead",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "UAT",
+                                        "Role":  "Azure Specialist",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "UAT",
+                                        "Role":  "Testing Lead",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "UAT",
+                                        "Role":  "Functional Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "UAT",
+                                        "Role":  "Trainers",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Training",
+                                        "Role":  "Change Management Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Training",
+                                        "Role":  "Trainers",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "DIALT",
+                                        "Role":  "Solution Architect",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "DIALT",
+                                        "Role":  "Change Management Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "DIALT",
+                                        "Role":  "Azure Lead",
+                                        "CapacityConsumption":  0.75
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "DIALT",
+                                        "Role":  "Azure Specialist",
+                                        "CapacityConsumption":  0.75
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "DIALT",
+                                        "Role":  "Functional Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "DIALT",
+                                        "Role":  "Trainers",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "DIALT",
+                                        "Role":  "Functional Lead Vendor A",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Go Live",
+                                        "Role":  "Solution Architect",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Go Live",
+                                        "Role":  "Change Management Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Go Live",
+                                        "Role":  "SAP Integrations Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Go Live",
+                                        "Role":  "SAP Integrations Specialist",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Go Live",
+                                        "Role":  "Azure Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Go Live",
+                                        "Role":  "Azure Specialist",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Go Live",
+                                        "Role":  "Functional Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Go Live",
+                                        "Role":  "Trainers",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Go Live",
+                                        "Role":  "Infrastructure Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Go Live",
+                                        "Role":  "Functional Lead Vendor A",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Hypercare",
+                                        "Role":  "Solution Architect",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Hypercare",
+                                        "Role":  "Change Management Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Hypercare",
+                                        "Role":  "SAP Integrations Lead",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Hypercare",
+                                        "Role":  "SAP Integrations Specialist",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Hypercare",
+                                        "Role":  "Azure Lead",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Hypercare",
+                                        "Role":  "Azure Specialist",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Hypercare",
+                                        "Role":  "Functional Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Hypercare",
+                                        "Role":  "Functional Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Hypercare",
+                                        "Role":  "Trainers",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Hypercare",
+                                        "Role":  "Trainers",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Hypercare",
+                                        "Role":  "Trainers",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Hypercare",
+                                        "Role":  "Infrastructure Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  2,
+                                        "Phase":  "Hypercare",
+                                        "Role":  "Functional Lead Vendor A",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Site Readiness",
+                                        "Role":  "Infrastructure Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Site Readiness",
+                                        "Role":  "SAP Integrations Lead",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Design Adaptation",
+                                        "Role":  "Solution Architect",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Design Adaptation",
+                                        "Role":  "SAP Integrations Lead",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Design Adaptation",
+                                        "Role":  "SAP Integrations Specialist",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Design Adaptation",
+                                        "Role":  "Azure Lead",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Design Adaptation",
+                                        "Role":  "Azure Specialist",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Design Adaptation",
+                                        "Role":  "Testing Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Design Adaptation",
+                                        "Role":  "Functional Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Design Adaptation",
+                                        "Role":  "Trainers",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Design Adaptation",
+                                        "Role":  "Infrastructure Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Design Adaptation",
+                                        "Role":  "Functional Lead Vendor A",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Functional Review",
+                                        "Role":  "Solution Architect",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Functional Review",
+                                        "Role":  "Change Management Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Functional Review",
+                                        "Role":  "SAP Integrations Lead",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Functional Review",
+                                        "Role":  "SAP Integrations Specialist",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Functional Review",
+                                        "Role":  "Azure Lead",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Functional Review",
+                                        "Role":  "Azure Specialist",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Functional Review",
+                                        "Role":  "Testing Lead",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Functional Review",
+                                        "Role":  "Functional Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Functional Review",
+                                        "Role":  "Trainers",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "UAT",
+                                        "Role":  "Solution Architect",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "UAT",
+                                        "Role":  "Change Management Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "UAT",
+                                        "Role":  "SAP Integrations Lead",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "UAT",
+                                        "Role":  "SAP Integrations Specialist",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "UAT",
+                                        "Role":  "Azure Lead",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "UAT",
+                                        "Role":  "Azure Specialist",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "UAT",
+                                        "Role":  "Testing Lead",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "UAT",
+                                        "Role":  "Functional Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "UAT",
+                                        "Role":  "Trainers",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Training",
+                                        "Role":  "Change Management Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Training",
+                                        "Role":  "Trainers",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "DIALT",
+                                        "Role":  "Solution Architect",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "DIALT",
+                                        "Role":  "Change Management Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "DIALT",
+                                        "Role":  "Azure Lead",
+                                        "CapacityConsumption":  0.75
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "DIALT",
+                                        "Role":  "Azure Specialist",
+                                        "CapacityConsumption":  0.75
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "DIALT",
+                                        "Role":  "Functional Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "DIALT",
+                                        "Role":  "Trainers",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "DIALT",
+                                        "Role":  "Functional Lead Vendor A",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Go Live",
+                                        "Role":  "Solution Architect",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Go Live",
+                                        "Role":  "Change Management Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Go Live",
+                                        "Role":  "SAP Integrations Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Go Live",
+                                        "Role":  "SAP Integrations Specialist",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Go Live",
+                                        "Role":  "Azure Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Go Live",
+                                        "Role":  "Azure Specialist",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Go Live",
+                                        "Role":  "Functional Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Go Live",
+                                        "Role":  "Trainers",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Go Live",
+                                        "Role":  "Infrastructure Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Go Live",
+                                        "Role":  "Functional Lead Vendor A",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Hypercare",
+                                        "Role":  "Solution Architect",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Hypercare",
+                                        "Role":  "Change Management Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Hypercare",
+                                        "Role":  "SAP Integrations Lead",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Hypercare",
+                                        "Role":  "SAP Integrations Specialist",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Hypercare",
+                                        "Role":  "Azure Lead",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Hypercare",
+                                        "Role":  "Azure Specialist",
+                                        "CapacityConsumption":  0.5
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Hypercare",
+                                        "Role":  "Functional Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Hypercare",
+                                        "Role":  "Functional Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Hypercare",
+                                        "Role":  "Trainers",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Hypercare",
+                                        "Role":  "Trainers",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Hypercare",
+                                        "Role":  "Trainers",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Hypercare",
+                                        "Role":  "Infrastructure Lead",
+                                        "CapacityConsumption":  1
+                                    },
+                                    {
+                                        "Cluster":  3,
+                                        "Phase":  "Hypercare",
+                                        "Role":  "Functional Lead Vendor A",
+                                        "CapacityConsumption":  0.5
+                                    }
+                                ]
+}
+;
+</script>
+<script>
+(function(){
+"use strict";
+
+const SITES = RAW_DATA.sitesMaster;
+const FIN = RAW_DATA.financials;
+const RES_RAW = RAW_DATA.resourceMaster.map((r,i)=>({...r, id:'R'+i}));
+const PHASES = RAW_DATA.implementationPhases;
+const ALLOC = RAW_DATA.phaseResourceAllocation;
+
+const WEEKS_PER_MONTH = 4.345;
+const PHASE_ORDER = ["Site Readiness","Design Adaptation","Functional Review","UAT","Training","DIALT","Go Live","Hypercare"];
+const CLUSTER_COLORS = {1:"#0f4c81",2:"#c9902f",3:"#6a8caf",4:"#8a5fb0"};
+
+const finBySite = {}; FIN.forEach(f=>finBySite[f.Site]=f);
+const siteBySite = {}; SITES.forEach(s=>siteBySite[s.Site]=s);
+
+function roleRows(roleName){ return RES_RAW.filter(r=>r.Role===roleName); }
+const ROLE_NAMES = [...new Set(RES_RAW.map(r=>r.Role))];
+
+function phasesFor(cluster, maturity){
+  return PHASES.filter(p=>p.Cluster===cluster && p.DeploymentMaturity===maturity).sort((a,b)=>a.Sequence-b.Sequence);
+}
+function allocFor(cluster, phase){
+  return ALLOC.filter(a=>a.Cluster===cluster && a.Phase===phase);
+}
+function totalWeeks(cluster, maturity){
+  return phasesFor(cluster, maturity).reduce((s,p)=>s+p.DurationWeeks,0);
+}
+
+function cheapestLabeling(site){
+  const f = finBySite[site];
+  return f.LabelPrintersLabelers <= f.ManualLabeling ? 'printers' : 'manual';
+}
+function cheapestWifi(site){
+  const f = finBySite[site];
+  const opts = [['full',f.WifiFull],['optimized',f.WifiFullOptimized],['prioritized',f.WifiPrioritized]];
+  opts.sort((a,b)=>a[1]-b[1]);
+  return opts[0][0];
+}
+
+/* Estado inicial = el escenario óptimo encontrado (32 sem / 7.4 m, $18,173,614 MXN,
+   cumple el objetivo de <=8 meses). Dotación y orden vienen de la búsqueda documentada
+   en la pestaña 4; el archivo abre mostrando este resultado en vez de "Actual". */
+function defaultState(){
+  const laborChoice = {}; const wifiChoice = {};
+  SITES.forEach(s=>{ laborChoice[s.Site]=cheapestLabeling(s.Site); wifiChoice[s.Site]=cheapestWifi(s.Site); });
+  const optimalHc = {R0:4,R1:0,R2:0,R3:0,R4:0,R5:7,R6:6,R7:0,R8:0,R9:9,R10:4,R11:3,R12:4,R13:4,R14:3,R15:13,R16:4,R17:0};
+  const headcounts = {}; RES_RAW.forEach(r=>headcounts[r.id]= optimalHc[r.id] ?? r.Actual);
+  return {
+    scenarioBase:'Personalizado',
+    startDate: '2026-09-01',
+    numFronts: 12,
+    siteOrder: ['Site 11','Site 15','Site 06','Site 07','Site 04','Site 14','Site 12','Site 02','Site 09','Site 01','Site 05','Site 08','Site 13','Site 03','Site 10'],
+    headcounts, laborChoice, wifiChoice
+  };
+}
+
+let state = defaultState();
+
+function applyHeadcountColumn(col){
+  RES_RAW.forEach(r=>state.headcounts[r.id]=r[col]);
+}
+
+/* ---------------- ENGINE ----------------
+   La capacidad de cada rol se valida en CADA transición de fase (no solo al arrancar
+   el sitio): un frente que termina una fase debe volver a calificar para la siguiente
+   antes de consumir esa semana. Si no alcanza la dotación, el sitio se queda pendiente
+   y reintenta la semana siguiente — esto es lo que hace que el headcount de cada rol
+   sí sea una palanca real sobre la fecha de término, no solo sobre el costo. */
+function runSimulation(st){
+  const numFronts = st.numFronts;
+  const roleCap = {};
+  ROLE_NAMES.forEach(name=>{
+    const rows = roleRows(name);
+    const total = rows.reduce((s,r)=>s+(st.headcounts[r.id]||0),0);
+    roleCap[name] = {multitask: rows[0].CanMultitask, capacity: total};
+  });
+
+  const phaseNamesCache = {};
+  function phaseNames(cluster){
+    if(!phaseNamesCache[cluster]) phaseNamesCache[cluster] = phasesFor(cluster,'A').map(p=>p.Phase);
+    return phaseNamesCache[cluster];
+  }
+  function durationOf(cluster, maturity, phaseName){
+    const p = PHASES.find(x=>x.Cluster===cluster && x.DeploymentMaturity===maturity && x.Phase===phaseName);
+    return p ? p.DurationWeeks : 0;
+  }
+  function demandAmt(role, capacityConsumption){
+    return roleCap[role].multitask==='No' ? 1 : capacityConsumption;
+  }
+  function fitsCapacity(committed, allocs){
+    const test = {...committed};
+    for(const a of allocs){
+      const amt = demandAmt(a.Role, a.CapacityConsumption);
+      test[a.Role] = (test[a.Role]||0) + amt;
+      if(test[a.Role] > roleCap[a.Role].capacity + 1e-9) return false;
+    }
+    return true;
+  }
+  function addAllocs(committed, allocs){
+    for(const a of allocs){
+      committed[a.Role] = (committed[a.Role]||0) + demandAmt(a.Role, a.CapacityConsumption);
+    }
+  }
+
+  const order = st.siteOrder.filter(code=>siteBySite[code]);
+  const clusterStarted = new Set();
+  const siteResult = order.map(code=>({
+    code, site: siteBySite[code], status:'queued', maturity:null,
+    startWeek:null, endWeek:null, demandBySite:{}, phaseLog:[]
+  }));
+
+  const fronts = new Array(numFronts).fill(null);
+  let nextIdx = 0;
+  const weeklyDemand = [];
+  let week = 0;
+  const MAX_WEEKS = 600;
+
+  function finalizeSite(fr, endWeek){
+    const sres = siteResult[fr.siteIdx];
+    sres.endWeek = endWeek;
+    sres.status = 'done';
+  }
+  function tallyDemand(fr, allocs){
+    const sres = siteResult[fr.siteIdx];
+    allocs.forEach(a=>{ sres.demandBySite[a.Role] = (sres.demandBySite[a.Role]||0) + demandAmt(a.Role,a.CapacityConsumption); });
+  }
+
+  while(week < MAX_WEEKS && (nextIdx < order.length || fronts.some(fr=>fr))){
+    for(let f=0; f<numFronts; f++){
+      if(!fronts[f] && nextIdx < order.length){
+        const idx = nextIdx++;
+        fronts[f] = {siteIdx: idx, cluster: siteResult[idx].site.Cluster, maturity: null, seqIdx: 0, weekInPhase: 0};
+      }
+    }
+
+    const committed = {};
+    const approvedThisWeek = new Set();
+
+    fronts.forEach(fr=>{
+      if(fr && fr.weekInPhase>0){
+        const names = phaseNames(fr.cluster);
+        addAllocs(committed, allocFor(fr.cluster, names[fr.seqIdx]));
+      }
+    });
+
+    fronts.forEach((fr, idx)=>{
+      if(!fr || fr.weekInPhase>0) return;
+      const names = phaseNames(fr.cluster);
+      if(fr.maturity){
+        while(fr.seqIdx < names.length && durationOf(fr.cluster, fr.maturity, names[fr.seqIdx])===0) fr.seqIdx++;
+        if(fr.seqIdx >= names.length){ finalizeSite(fr, week); fronts[idx]=null; return; }
+      }
+      const allocs = allocFor(fr.cluster, names[fr.seqIdx]);
+      if(fitsCapacity(committed, allocs)){
+        addAllocs(committed, allocs);
+        if(fr.maturity===null){
+          fr.maturity = clusterStarted.has(fr.cluster) ? 'B' : 'A';
+          clusterStarted.add(fr.cluster);
+          const sres = siteResult[fr.siteIdx];
+          sres.maturity = fr.maturity; sres.startWeek = week; sres.status='active';
+        }
+        fr.weekInPhase = 1;
+        approvedThisWeek.add(idx);
+        tallyDemand(fr, allocs);
+        const sres = siteResult[fr.siteIdx];
+        sres.phaseLog.push({phase: names[fr.seqIdx], start: week, end: null});
+        fr.logIdx = sres.phaseLog.length-1;
+      }
+    });
+
+    weeklyDemand[week] = committed;
+
+    fronts.forEach((fr, idx)=>{
+      if(fr && fr.weekInPhase>0 && !approvedThisWeek.has(idx)){
+        const names = phaseNames(fr.cluster);
+        tallyDemand(fr, allocFor(fr.cluster, names[fr.seqIdx]));
+      }
+    });
+
+    fronts.forEach((fr, idx)=>{
+      if(!fr || fr.weekInPhase===0) return;
+      if(!approvedThisWeek.has(idx)) fr.weekInPhase++;
+      const names = phaseNames(fr.cluster);
+      const dur = durationOf(fr.cluster, fr.maturity, names[fr.seqIdx]);
+      if(fr.weekInPhase >= dur){
+        siteResult[fr.siteIdx].phaseLog[fr.logIdx].end = week+1;
+        fr.seqIdx++;
+        fr.weekInPhase = 0;
+        if(fr.seqIdx >= names.length){
+          finalizeSite(fr, week+1);
+          fronts[idx] = null;
+        }
+      }
+    });
+    week++;
+  }
+
+  fronts.forEach(fr=>{
+    if(fr){ siteResult[fr.siteIdx].pendingPhase = phaseNames(fr.cluster)[fr.seqIdx] ?? null; }
+  });
+
+  const stalled = siteResult.filter(s=>s.status!=='done').map(s=>s.code);
+  const totalProgramWeeks = stalled.length ? null : Math.max(0, ...siteResult.map(s=>s.endWeek||0));
+  return { siteResult, weeklyDemand, totalProgramWeeks, roleCap, stalled };
+}
+
+/* ---------------- COST ---------------- */
+function computeCost(st, sim){
+  if(sim.totalProgramWeeks===null){
+    return { oneTimeBySite:{}, oneTimeTotal:0, laborByRole:{}, laborTotal:0, grandTotal:null, costBySite:{}, laborBySiteRole:{} };
+  }
+  const oneTimeBySite = {};
+  st.siteOrder.forEach(code=>{
+    const f = finBySite[code];
+    const labeling = st.laborChoice[code]==='manual' ? f.ManualLabeling : f.LabelPrintersLabelers;
+    const wifiMap = {full:f.WifiFull, optimized:f.WifiFullOptimized, prioritized:f.WifiPrioritized};
+    const wifi = wifiMap[st.wifiChoice[code]];
+    oneTimeBySite[code] = f.ImplementationCosts + f.Devices + f.ForkliftStructure + f.WarehouseSignage + f.Labels + labeling + wifi;
+  });
+  const oneTimeTotal = Object.values(oneTimeBySite).reduce((a,b)=>a+b,0);
+
+  const totalMonths = sim.totalProgramWeeks / WEEKS_PER_MONTH;
+  const laborByRole = {};
+  const laborBySiteRole = {}; // {site: {role: cost}}
+  st.siteOrder.forEach(c=>laborBySiteRole[c]={});
+
+  ROLE_NAMES.forEach(name=>{
+    const rows = roleRows(name);
+    const isFixed = rows[0].FixedOrFlexibleCost === 'Fixed';
+    let roleCost = 0;
+    if(isFixed){
+      rows.forEach(r=>{ roleCost += (st.headcounts[r.id]||0) * r.AvgMonthlyCostMXN * totalMonths; });
+    } else {
+      let totalFteWeeks = 0;
+      sim.siteResult.forEach(s=> totalFteWeeks += (s.demandBySite[name]||0) );
+      const avgRate = rows.reduce((s,r)=>s+r.AvgMonthlyCostMXN,0)/rows.length;
+      roleCost = totalFteWeeks * (avgRate / WEEKS_PER_MONTH);
+    }
+    laborByRole[name] = roleCost;
+
+    const totalFte = sim.siteResult.reduce((s,r)=>s+(r.demandBySite[name]||0),0);
+    if(totalFte > 0){
+      sim.siteResult.forEach(s=>{
+        const share = (s.demandBySite[name]||0)/totalFte;
+        laborBySiteRole[s.code][name] = roleCost * share;
+      });
+    }
+  });
+
+  const laborTotal = Object.values(laborByRole).reduce((a,b)=>a+b,0);
+  const grandTotal = oneTimeTotal + laborTotal;
+
+  const costBySite = {};
+  st.siteOrder.forEach(code=>{
+    const labor = Object.values(laborBySiteRole[code]||{}).reduce((a,b)=>a+b,0);
+    costBySite[code] = { oneTime: oneTimeBySite[code], labor, total: oneTimeBySite[code]+labor };
+  });
+
+  return { oneTimeBySite, oneTimeTotal, laborByRole, laborTotal, grandTotal, costBySite, laborBySiteRole };
+}
+
+/* ---------------- RENDER HELPERS ---------------- */
+function fmtMoney(n){ return n===null||n===undefined ? '—' : '$' + Math.round(n).toLocaleString('es-MX'); }
+function fmtMoneyK(n){ return '$' + (n/1000).toLocaleString('es-MX',{maximumFractionDigits:0}) + 'K'; }
+function addWeeks(dateStr, weeks){
+  const d = new Date(dateStr+'T00:00:00');
+  d.setDate(d.getDate() + Math.round(weeks*7));
+  return d;
+}
+function fmtDate(d){ return d.toLocaleDateString('es-MX',{year:'numeric',month:'short',day:'2-digit'}); }
+function monthsBetween(a,b){ return (b-a)/(1000*3600*24*30.4375); }
+
+let currentSim = null, currentCost = null;
+
+function recompute(){
+  currentSim = runSimulation(state);
+  currentCost = computeCost(state, currentSim);
+  renderAll();
+}
+
+/* ---------------- KPI BAR ---------------- */
+function renderKpis(){
+  const el = document.getElementById('kpiBar');
+  if(currentSim.totalProgramWeeks===null){
+    el.innerHTML = `
+      <div class="kpi badge-bad" style="min-width:100%;"><div class="lbl">Dotación insuficiente</div>
+      <div class="val" style="font-size:14px;">${currentSim.stalled.length} sitio(s) nunca alcanzan la capacidad necesaria para avanzar de fase: ${currentSim.stalled.join(', ')}. Sube la dotación de los roles saturados en la pestaña 3, o reduce los frentes en paralelo.</div></div>
+    `;
+    return;
+  }
+  const startD = new Date(state.startDate+'T00:00:00');
+  const endD = addWeeks(state.startDate, currentSim.totalProgramWeeks);
+  const months = currentSim.totalProgramWeeks / WEEKS_PER_MONTH;
+  const meets8 = months <= 8.0001;
+  el.innerHTML = `
+    <div class="kpi"><div class="lbl">Inicio del programa</div><div class="val" style="font-size:14px;">${fmtDate(startD)}</div></div>
+    <div class="kpi"><div class="lbl">Fecha de término</div><div class="val" style="font-size:14px;">${fmtDate(endD)}</div></div>
+    <div class="kpi"><div class="lbl">Duración</div><div class="val">${currentSim.totalProgramWeeks} sem <span style="font-size:12px;opacity:.8;">(${months.toFixed(1)} m)</span></div></div>
+    <div class="kpi ${meets8?'badge-ok':'badge-bad'}"><div class="lbl">¿Cumple ≤ 8 meses?</div><div class="val">${meets8?'Sí ✓':'No ✗'}</div></div>
+    <div class="kpi"><div class="lbl">Costo total</div><div class="val">${fmtMoney(currentCost.grandTotal)}</div></div>
+    <div class="kpi"><div class="lbl">Escenario</div><div class="val" style="font-size:14px;">${state.scenarioBase}</div></div>
+  `;
+}
+
+/* ---------------- SIDEBAR ---------------- */
+function renderScenarioBtns(){
+  const el = document.getElementById('scenarioBtns');
+  const opts = [['Actual','Actual'],['Escenario1','Escenario 1'],['Personalizado','Personalizado']];
+  el.innerHTML = opts.map(([key,label])=>`<button data-key="${key}" class="${state.scenarioBase===key?'active':''}">${label}</button>`).join('');
+  el.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+    const key = b.dataset.key;
+    state.scenarioBase = key;
+    if(key==='Actual') applyHeadcountColumn('Actual');
+    if(key==='Escenario1') applyHeadcountColumn('Escenario1');
+    recompute(); renderSidebar();
+  });
+}
+function renderOrderList(){
+  const el = document.getElementById('orderList');
+  el.innerHTML = state.siteOrder.map((code,i)=>{
+    const s = siteBySite[code];
+    return `<li>
+      <span class="tag" style="background:${CLUSTER_COLORS[s.Cluster]}"></span>
+      <span class="name">${i+1}. ${code} <span style="color:var(--sub)">(${s.Country}, C${s.Cluster})</span></span>
+      <button data-i="${i}" data-dir="-1" ${i===0?'disabled':''}>↑</button>
+      <button data-i="${i}" data-dir="1" ${i===state.siteOrder.length-1?'disabled':''}>↓</button>
+    </li>`;
+  }).join('');
+  el.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+    const i = +b.dataset.i, dir = +b.dataset.dir;
+    const arr = state.siteOrder;
+    [arr[i],arr[i+dir]] = [arr[i+dir],arr[i]];
+    state.scenarioBase = 'Personalizado';
+    recompute(); renderSidebar();
+  });
+}
+function renderSidebar(){
+  renderScenarioBtns();
+  document.getElementById('startDate').value = state.startDate;
+  document.getElementById('numFronts').value = state.numFronts;
+  renderOrderList();
+}
+
+/* ---------------- TABS ---------------- */
+const TABS = [
+  ['tab-1','1 · Programa general'],
+  ['tab-2','2 · Plan por sitio'],
+  ['tab-3','3 · Recursos'],
+  ['tab-4','4 · Escenarios'],
+  ['tab-5','5 · Costos'],
+  ['tab-6','Explicación'],
+];
+function renderTabNav(active){
+  const el = document.getElementById('tabNav');
+  el.innerHTML = TABS.map(([id,label])=>`<button data-id="${id}" class="${id===active?'active':''}">${label}</button>`).join('');
+  el.querySelectorAll('button').forEach(b=>b.onclick=()=>showTab(b.dataset.id));
+}
+function showTab(id){
+  document.querySelectorAll('section.tab').forEach(s=>s.classList.toggle('active', s.id===id));
+  renderTabNav(id);
+}
+
+/* ---------------- TAB 1: GANTT GENERAL ---------------- */
+function renderGanttGeneral(){
+  const knownEnds = currentSim.siteResult.filter(s=>s.endWeek!=null).map(s=>s.endWeek);
+  const totalWeeks = Math.max(currentSim.totalProgramWeeks ?? Math.max(1,...knownEnds,1), 1);
+  const rows = currentSim.siteResult.map(s=>({...s})).sort((a,b)=>(a.startWeek??9999)-(b.startWeek??9999));
+  const html = rows.map(s=>{
+    if(s.startWeek==null){
+      return `<div class="gantt-row"><div class="gantt-label">${s.code} · ${s.site.Country}</div>
+        <div class="gantt-track"><div class="gantt-seg" style="left:0;width:100%;background:#999;">nunca arranca — falta dotación</div></div></div>`;
+    }
+    const end = s.endWeek ?? totalWeeks;
+    const leftPct = (s.startWeek/totalWeeks)*100;
+    const widthPct = Math.max(((end-s.startWeek)/totalWeeks)*100, 0.8);
+    const color = s.endWeek==null ? '#c0392b' : CLUSTER_COLORS[s.site.Cluster];
+    const label = s.endWeek==null ? `${s.code} (bloqueado)` : `${s.code} (${s.maturity})`;
+    return `<div class="gantt-row">
+      <div class="gantt-label">${s.code} · ${s.site.Country}</div>
+      <div class="gantt-track">
+        <div class="gantt-seg" style="left:${leftPct}%;width:${widthPct}%;background:${color};" title="${s.code}: sem ${s.startWeek}–${end} (maturity ${s.maturity})">${label}</div>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('ganttGeneral').innerHTML = html + axisHtml(totalWeeks);
+  document.getElementById('legendGeneral').innerHTML = Object.entries(CLUSTER_COLORS).map(([c,col])=>
+    `<span><i style="background:${col}"></i>Cluster ${c}</span>`).join('') +
+    `<span><i style="background:#999"></i>Etiqueta = sitio (madurez A/B aplicada)</span>`;
+}
+function axisHtml(totalWeeks){
+  const marks = 6;
+  let html = '<div class="gantt-axis">';
+  for(let i=0;i<=marks;i++){
+    const wk = Math.round((i/marks)*totalWeeks);
+    html += `<span style="position:absolute;left:${(i/marks)*100}%;">sem ${wk}</span>`;
+  }
+  return html + '</div>';
+}
+
+/* ---------------- TAB 2: PLAN POR SITIO ---------------- */
+function renderSiteSelect(){
+  const el = document.getElementById('siteSelect');
+  const cur = el.value;
+  el.innerHTML = state.siteOrder.map(c=>`<option value="${c}">${c} — ${siteBySite[c].Country}</option>`).join('');
+  el.value = cur && state.siteOrder.includes(cur) ? cur : state.siteOrder[0];
+  el.onchange = renderSiteTab;
+}
+function renderSiteTab(){
+  const code = document.getElementById('siteSelect').value;
+  const sres = currentSim.siteResult.find(s=>s.code===code);
+  if(!sres) return;
+  if(sres.startWeek==null){
+    document.getElementById('siteDetailCards').innerHTML = `<div class="card" style="grid-column:1/-1;"><h4>Estado</h4><div style="font-size:14px;font-weight:600;color:var(--bad);">Este sitio nunca llegó a arrancar: no alcanzó la dotación necesaria para iniciar Site Readiness antes de que se agotara la simulación.</div></div>`;
+    document.getElementById('ganttSite').innerHTML = '';
+    document.getElementById('sitePhaseTable').innerHTML = '';
+    return;
+  }
+  const blocked = sres.endWeek==null;
+  const startD = addWeeks(state.startDate, sres.startWeek);
+  const endD = blocked ? null : addWeeks(state.startDate, sres.endWeek);
+  const dur = blocked ? null : sres.endWeek - sres.startWeek;
+  document.getElementById('siteDetailCards').innerHTML = `
+    <div class="card"><h4>Inicio / Fin</h4><div style="font-size:14px;font-weight:600;">${fmtDate(startD)} → ${blocked?'<span style=\"color:var(--bad)\">bloqueado</span>':fmtDate(endD)}</div></div>
+    <div class="card"><h4>Duración / Madurez</h4><div style="font-size:14px;font-weight:600;">${blocked?'—':dur+' semanas'} · Madurez ${sres.maturity}</div></div>
+    <div class="card"><h4>Cluster / País</h4><div style="font-size:14px;font-weight:600;">Cluster ${sres.site.Cluster} · ${sres.site.Country}</div></div>
+  `;
+  const rawRows = sres.phaseLog.map(r=>({phase:r.phase, s:r.start, e:r.end, dur: r.end!=null ? r.end-r.start : null}));
+  const rows = [];
+  rawRows.forEach((r,i)=>{
+    const prevEnd = i===0 ? sres.startWeek : rawRows[i-1].e;
+    if(prevEnd!=null && r.s>prevEnd){
+      rows.push({phase:'Esperando dotación disponible', s:prevEnd, e:r.s, dur:r.s-prevEnd, isWait:true});
+    }
+    rows.push(r);
+  });
+  if(blocked && sres.pendingPhase && (rows.length===0 || rows[rows.length-1].e!=null)){
+    const pendingStart = rows.length ? rows[rows.length-1].e : sres.startWeek;
+    rows.push({phase: sres.pendingPhase, s: pendingStart, e: null, dur: null});
+  }
+  const lastEnd = rows.length ? (rows[rows.length-1].e ?? (currentSim.totalProgramWeeks || rows[rows.length-1].s+1)) : sres.startWeek+1;
+  const totalW = Math.max(lastEnd - sres.startWeek, 1);
+  document.getElementById('ganttSite').innerHTML = rows.map(r=>{
+    const leftPct = ((r.s-sres.startWeek)/totalW)*100;
+    const eff = r.e ?? lastEnd;
+    const widthPct = Math.max(((eff-r.s)/totalW)*100, 0.8);
+    const color = r.e==null ? '#c0392b' : (r.isWait ? '#b8860b' : CLUSTER_COLORS[sres.site.Cluster]);
+    const label = r.dur!=null ? (r.isWait?'espera '+r.dur+'sem':r.dur+'sem') : 'en espera de recursos';
+    return `<div class="gantt-row">
+      <div class="gantt-label">${r.phase}</div>
+      <div class="gantt-track">
+        <div class="gantt-seg" style="left:${leftPct}%;width:${widthPct}%;background:${color};">${label}</div>
+      </div>
+    </div>`;
+  }).join('') + axisHtml(totalW);
+
+  const tbl = document.getElementById('sitePhaseTable');
+  tbl.innerHTML = `<thead><tr><th>Fase</th><th>Semana inicio</th><th>Semana fin</th><th>Duración</th><th>Fecha inicio</th><th>Fecha fin</th></tr></thead>
+    <tbody>${rows.map(r=>`<tr style="${r.isWait?'color:var(--warn);font-style:italic;':''}"><td>${r.phase}</td><td class="num">${r.s}</td><td class="num">${r.e??'—'}</td><td class="num">${r.dur!=null?r.dur+' sem':'sin terminar'}</td><td>${fmtDate(addWeeks(state.startDate,r.s))}</td><td>${r.e!=null?fmtDate(addWeeks(state.startDate,r.e)):'—'}</td></tr>`).join('')}</tbody>`;
+}
+
+/* ---------------- TAB 3: RECURSOS ---------------- */
+function renderResourceTable(){
+  const tbl = document.getElementById('resourceTable');
+  tbl.innerHTML = `<thead><tr><th>Rol</th><th>Modalidad</th><th>Multitarea</th><th>Origen</th><th>Costo</th><th>Costo mensual (MXN)</th><th>Dotación</th></tr></thead>
+    <tbody>${RES_RAW.map(r=>`<tr>
+      <td>${r.Role}</td><td>${r.WorkMode}</td><td>${r.CanMultitask}</td><td>${r.InternalOrExternal}</td><td>${r.FixedOrFlexibleCost}</td>
+      <td class="num">${fmtMoney(r.AvgMonthlyCostMXN)}</td>
+      <td class="num"><input class="cell-input" type="number" min="0" step="1" data-id="${r.id}" value="${state.headcounts[r.id]}"></td>
+    </tr>`).join('')}</tbody>`;
+  tbl.querySelectorAll('input').forEach(inp=>inp.onchange=()=>{
+    state.headcounts[inp.dataset.id] = +inp.value || 0;
+    state.scenarioBase = 'Personalizado';
+    recompute(); renderSidebar();
+  });
+}
+function renderUtilCards(){
+  const peak = {};
+  currentSim.weeklyDemand.forEach(wk=>{ Object.entries(wk).forEach(([role,amt])=>{ peak[role]=Math.max(peak[role]||0,amt); }); });
+  const el = document.getElementById('utilCards');
+  el.innerHTML = ROLE_NAMES.map(name=>{
+    const cap = currentSim.roleCap[name].capacity;
+    const p = peak[name]||0;
+    const pct = cap>0 ? (p/cap)*100 : (p>0?999:0);
+    const over = pct>100;
+    return `<div class="barh"><div class="name">${name}</div><div class="track"><div class="fill" style="width:${Math.min(pct,100)}%;background:${over?'var(--bad)':'var(--brand)'}"></div></div><div class="amt">${p.toFixed(1)} / ${cap} <span class="pill ${over?'pill-bad':'pill-ok'}">${pct.toFixed(0)}%</span></div></div>`;
+  }).join('');
+}
+function renderResourceBySite(){
+  const tbl = document.getElementById('resourceBySiteTable');
+  const rolesUsed = ROLE_NAMES.filter(r=>currentSim.siteResult.some(s=>s.demandBySite[r]>0));
+  tbl.innerHTML = `<thead><tr><th>Sitio</th>${rolesUsed.map(r=>`<th>${r}</th>`).join('')}<th>Total FTE-sem</th></tr></thead>
+    <tbody>${currentSim.siteResult.map(s=>{
+      const total = rolesUsed.reduce((sum,r)=>sum+(s.demandBySite[r]||0),0);
+      return `<tr><td>${s.code}</td>${rolesUsed.map(r=>`<td class="num">${(s.demandBySite[r]||0).toFixed(1)}</td>`).join('')}<td class="num"><b>${total.toFixed(1)}</b></td></tr>`;
+    }).join('')}</tbody>`;
+}
+
+/* ---------------- TAB 4: ESCENARIOS ---------------- */
+function scenarioSnapshot(){
+  const weeks = currentSim.totalProgramWeeks;
+  return {
+    state: JSON.parse(JSON.stringify(state)),
+    kpi: {
+      weeks,
+      months: weeks==null ? null : weeks/WEEKS_PER_MONTH,
+      cost: currentCost.grandTotal,
+      meets8: weeks!=null && weeks/WEEKS_PER_MONTH <= 8.0001
+    }
+  };
+}
+function loadScenarios(){ try{ return JSON.parse(localStorage.getItem('wms_scenarios')||'[]'); }catch(e){ return []; } }
+function saveScenarios(list){ localStorage.setItem('wms_scenarios', JSON.stringify(list)); }
+
+function renderScenarioTab(){
+  const list = loadScenarios();
+  const btn = document.getElementById('btnSaveScenario');
+  btn.onclick = ()=>{
+    const name = document.getElementById('scenarioName').value.trim() || ('Escenario '+(list.length+1));
+    list.push({name, ...scenarioSnapshot()});
+    saveScenarios(list);
+    document.getElementById('scenarioName').value='';
+    renderScenarioTab();
+  };
+  const validCosts = list.filter(l=>l.kpi.meets8).map(l=>l.kpi.cost);
+  const minWinningCost = validCosts.length ? Math.min(...validCosts) : null;
+
+  const tbl = document.getElementById('scenarioCompareTable');
+  tbl.innerHTML = `<thead><tr><th>Escenario</th><th>Frentes</th><th>Fecha fin</th><th>Duración</th><th>¿≤8 meses?</th><th>Costo total</th><th></th></tr></thead>
+    <tbody>${list.map((l,i)=>{
+      const win = l.kpi.meets8 && l.kpi.cost===minWinningCost;
+      const blocked = l.kpi.weeks==null;
+      const endD = blocked ? null : addWeeks(l.state.startDate, l.kpi.weeks);
+      return `<tr style="${win?'background:var(--good-bg);':''}">
+        <td>${l.name}</td>
+        <td class="num">${l.state.numFronts}</td>
+        <td>${blocked?'—':fmtDate(endD)}</td>
+        <td class="num">${blocked?'sin dotación suficiente':l.kpi.weeks+' sem ('+l.kpi.months.toFixed(1)+'m)'}</td>
+        <td class="center"><span class="pill ${l.kpi.meets8?'pill-ok':'pill-bad'}">${l.kpi.meets8?'Sí':'No'}</span></td>
+        <td class="num">${fmtMoney(l.kpi.cost)}</td>
+        <td><button class="btn secondary" data-i="${i}" data-act="load">Cargar</button> <button class="btn danger" data-i="${i}" data-act="del">Borrar</button></td>
+      </tr>`;
+    }).join('')}</tbody>`;
+  tbl.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+    const i = +b.dataset.i;
+    if(b.dataset.act==='del'){ list.splice(i,1); saveScenarios(list); renderScenarioTab(); return; }
+    state = JSON.parse(JSON.stringify(list[i].state));
+    recompute(); renderSidebar();
+  });
+}
+
+/* ---------------- TAB 5: COSTOS ---------------- */
+function renderCostLeverTable(){
+  const tbl = document.getElementById('costLeverTable');
+  tbl.innerHTML = `<thead><tr><th>Sitio</th><th>Etiquetado</th><th>Costo etiquetado</th><th>Wifi</th><th>Costo wifi</th></tr></thead>
+    <tbody>${state.siteOrder.map(code=>{
+      const f = finBySite[code];
+      return `<tr>
+        <td>${code}</td>
+        <td><select class="cell-select" data-code="${code}" data-kind="labor">
+          <option value="printers" ${state.laborChoice[code]==='printers'?'selected':''}>Impresoras (${fmtMoneyK(f.LabelPrintersLabelers)})</option>
+          <option value="manual" ${state.laborChoice[code]==='manual'?'selected':''}>Manual (${fmtMoneyK(f.ManualLabeling)})</option>
+        </select></td>
+        <td class="num">${fmtMoney(state.laborChoice[code]==='manual'?f.ManualLabeling:f.LabelPrintersLabelers)}</td>
+        <td><select class="cell-select" data-code="${code}" data-kind="wifi">
+          <option value="full" ${state.wifiChoice[code]==='full'?'selected':''}>Full (${fmtMoneyK(f.WifiFull)})</option>
+          <option value="optimized" ${state.wifiChoice[code]==='optimized'?'selected':''}>Full Optimized (${fmtMoneyK(f.WifiFullOptimized)})</option>
+          <option value="prioritized" ${state.wifiChoice[code]==='prioritized'?'selected':''}>Prioritized (${fmtMoneyK(f.WifiPrioritized)})</option>
+        </select></td>
+        <td class="num">${fmtMoney({full:f.WifiFull,optimized:f.WifiFullOptimized,prioritized:f.WifiPrioritized}[state.wifiChoice[code]])}</td>
+      </tr>`;
+    }).join('')}</tbody>`;
+  tbl.querySelectorAll('select').forEach(sel=>sel.onchange=()=>{
+    const {code, kind} = sel.dataset;
+    if(kind==='labor') state.laborChoice[code] = sel.value; else state.wifiChoice[code] = sel.value;
+    state.scenarioBase = 'Personalizado';
+    currentCost = computeCost(state, currentSim);
+    renderKpis(); renderCostTab(); renderSidebar();
+  });
+}
+function renderCostTab(){
+  renderCostLeverTable();
+  if(currentSim.totalProgramWeeks===null){
+    document.getElementById('costSummaryCards').innerHTML = `<div class="card" style="grid-column:1/-1;"><h4>Costo</h4><div style="color:var(--bad);font-weight:600;">No se puede costear: hay sitios que nunca terminan con la dotación actual. Ajusta la pestaña 3 primero.</div></div>`;
+    document.getElementById('costBySite').innerHTML = '';
+    document.getElementById('costByRole').innerHTML = '';
+    document.getElementById('costDetailTable').innerHTML = '';
+    return;
+  }
+  document.getElementById('costSummaryCards').innerHTML = `
+    <div class="card"><h4>Costo único de implementación</h4><div style="font-size:18px;font-weight:700;">${fmtMoney(currentCost.oneTimeTotal)}</div></div>
+    <div class="card"><h4>Costo de mano de obra</h4><div style="font-size:18px;font-weight:700;">${fmtMoney(currentCost.laborTotal)}</div></div>
+    <div class="card"><h4>Costo total del programa</h4><div style="font-size:18px;font-weight:700;color:var(--brand);">${fmtMoney(currentCost.grandTotal)}</div></div>
+  `;
+  const maxSite = Math.max(...Object.values(currentCost.costBySite).map(c=>c.total));
+  document.getElementById('costBySite').innerHTML = state.siteOrder.map(code=>{
+    const c = currentCost.costBySite[code];
+    return `<div class="barh"><div class="name">${code}</div><div class="track"><div class="fill" style="width:${(c.total/maxSite)*100}%"></div></div><div class="amt">${fmtMoneyK(c.total)}</div></div>`;
+  }).join('');
+  const maxRole = Math.max(...Object.values(currentCost.laborByRole),1);
+  document.getElementById('costByRole').innerHTML = ROLE_NAMES.filter(r=>currentCost.laborByRole[r]>0).sort((a,b)=>currentCost.laborByRole[b]-currentCost.laborByRole[a]).map(name=>{
+    const v = currentCost.laborByRole[name];
+    return `<div class="barh"><div class="name">${name}</div><div class="track"><div class="fill" style="width:${(v/maxRole)*100}%"></div></div><div class="amt">${fmtMoneyK(v)}</div></div>`;
+  }).join('');
+  const tbl = document.getElementById('costDetailTable');
+  tbl.innerHTML = `<thead><tr><th>Sitio</th><th>Implementación única</th><th>Mano de obra asignada</th><th>Total</th></tr></thead>
+    <tbody>${state.siteOrder.map(code=>{
+      const c = currentCost.costBySite[code];
+      return `<tr><td>${code}</td><td class="num">${fmtMoney(c.oneTime)}</td><td class="num">${fmtMoney(c.labor)}</td><td class="num"><b>${fmtMoney(c.total)}</b></td></tr>`;
+    }).join('')}
+    <tr style="font-weight:700;border-top:2px solid var(--line);"><td>Total</td><td class="num">${fmtMoney(currentCost.oneTimeTotal)}</td><td class="num">${fmtMoney(currentCost.laborTotal)}</td><td class="num">${fmtMoney(currentCost.grandTotal)}</td></tr>
+    </tbody>`;
+}
+
+/* ---------------- TAB 6: EXPLICACIÓN ---------------- */
+function renderExplain(){
+  document.getElementById('explainBody').innerHTML = `
+    <div class="warn-box"><b>Reglas duras del ejercicio:</b> el simulador nunca escribe sobre el archivo original; toda la data (sitios, costos, roles, fases, asignación de recursos) se lee tal cual. Los escenarios "Actual" y "Escenario 1" del archivo son cargables y calculables desde el panel izquierdo.</div>
+
+    <details class="explain"><summary>ENTREGABLES</summary><div class="body">
+      Es la primera pestaña del archivo y no aporta datos de cálculo — define el objetivo del ejercicio (completar el programa en 8 meses, y entre las alternativas que lo logren, la de menor costo) y trae la fórmula exacta de la rúbrica de calificación (por ejemplo, la celda de "Rúbrica" calcula <code>I21/H21*H22</code>, es decir, tu puntaje obtenido sobre el máximo, aplicado al peso de esa mitad). De ahí salen literalmente los 5 entregables que construye este simulador: pestañas 1 a 5 de esta app corresponden uno a uno a los 5 puntos listados en esa hoja.
+    </div></details>
+
+    <details class="explain" open><summary>Sites Master</summary><div class="body">
+      15 sitios (7 México, 8 Colombia) agrupados en 4 Clusters. Aporta datos operativos (capacidad, almacenes, forklifts, wifi) que son descriptivos — el archivo no los conecta a ninguna fórmula de costo o duración, así que el simulador los muestra como contexto pero no los usa para calcular fechas ni costos.
+    </div></details>
+
+    <details class="explain"><summary>Financials (USD)</summary><div class="body">
+      Costo de implementación por sitio. La columna "Costs without Labelers & WiFi" ya es la suma de Implementation Costs + Devices + Forklift Structure + Warehouse Signage + Labels (fórmula del propio archivo). Encima de eso, cada sitio elige <b>una</b> forma de etiquetado (impresoras vs. manual) y <b>una</b> opción de wifi (Full / Full Optimized / Prioritized) — son alternativas, no costos acumulables. El simulador las deja como palanca por sitio (pestaña 5) y por defecto elige la opción más económica de cada una.
+      <br><br>"Benefits per month" es un beneficio mensual, no un costo — no se incluye en el resumen de costos (entregable 5) para no inflarlo artificialmente.
+    </div></details>
+
+    <details class="explain"><summary>Resource Master</summary><div class="body">
+      17 roles con costo mensual, modalidad y dotación para "Actual" y "Escenario 1". Tres roles tienen variante Interna/Externa (Change Management Lead, Infrastructure Lead, Functional Lead) con la misma capacidad de multitarea: para verificar si hay suficiente gente en un momento dado, el simulador junta ambas variantes en una sola bolsa de capacidad por rol; para el costo, cada variante se cobra a su propia tarifa.
+      <br><br><b>Fixed vs. Flexible</b> define cómo se cobra: los roles "Fixed" se pagan como nómina fija (dotación × tarifa mensual × meses que dura el programa completo); los "Flexible" se pagan solo por el uso real (FTE-semana consumidas × tarifa equivalente semanal) — esto es un supuesto del simulador, ya que el archivo no detalla la fórmula de facturación.
+      <br><br><b>Can Multitask</b> define cómo se suma la demanda de un rol cuando varios sitios lo necesitan al mismo tiempo: "Yes" y "Partial" se tratan igual (la fracción de FTE se suma directamente); "No" obliga a reservar una persona completa por cada sitio concurrente que lo requiera, sin importar la fracción indicada (una persona en sitio no se puede partir entre ubicaciones).
+    </div></details>
+
+    <details class="explain"><summary>Implementation Phases</summary><div class="body">
+      8 fases por cluster, en dos madureces: "A" (primer sitio del cluster) y "B" (sitios siguientes del mismo cluster, más rápidos por curva de aprendizaje). El simulador asigna A al primer sitio de cada cluster que arranca según el orden y los frentes que definas, y B a los demás sitios del mismo cluster.
+      <br><br><i>Nota de dato:</i> Cluster 4 (Site 12) tiene la fase "Design Adaptation" en 0 semanas en ambas madureces, y A=B en las 8 fases (no hay diferencia de curva de aprendizaje) — se respeta tal cual, sin corregirlo, porque ese cluster solo tiene un sitio.
+    </div></details>
+
+    <details class="explain"><summary>Phase-Resource Allocation</summary><div class="body">
+      Define cuántos FTE de cada rol consume cada fase, por cluster. Cuando un rol aparece más de una vez en la misma fase (ej. 2 "Functional Lead" en Hypercare), el simulador suma ambas filas como una necesidad de 2 personas simultáneas para ese sitio.
+      <br><br><b>Hueco de datos importante:</b> esta hoja <u>no tiene ninguna fila para Cluster 4</u> (solo cubre Clusters 1, 2 y 3), aunque Site 12 (Cluster 4) sí existe en Sites Master e Implementation Phases. Por regla del ejercicio no se inventa ese dato: el simulador calcula las fechas de Site 12 con normalidad (usa sus duraciones de fase), pero su consumo de recursos y costo de mano de obra asignada quedan en 0 — es una limitación del archivo de origen, no del modelo.
+    </div></details>
+
+    <details class="explain" open><summary>Cómo se calcula el cronograma (motor del simulador)</summary><div class="body">
+      <ul>
+        <li>Los sitios entran a una cola en el orden que defines y se reparten entre los frentes en paralelo que definas (el primer frente libre toma el siguiente sitio de la cola).</li>
+        <li>Antes de que un sitio arranque <b>o pase a su siguiente fase</b>, el simulador verifica que la dotación disponible de cada rol alcance esa fase, sumando la demanda de todos los sitios/frentes activos en ese instante. Si no alcanza, el sitio se queda pendiente en esa fase y reintenta la semana siguiente — no se salta la validación, y por eso reducir la dotación de un rol que sí se usa en el cronograma sí puede alargar la fecha de término.</li>
+        <li>Esto significa que la dotación por rol (pestaña 3) es una palanca real sobre la fecha, no solo sobre el costo: subir "frentes en paralelo" sin subir la gente que esas fases necesitan simplemente hace que los sitios adicionales se queden esperando recursos.</li>
+        <li>El programa termina cuando el último sitio completa su fase de Hypercare. Si con la dotación actual algún sitio nunca logra completarse, el tablero lo marca en rojo como "bloqueado" en vez de mostrar una fecha ficticia.</li>
+      </ul>
+    </div></details>
+  `;
+}
+
+function renderAll(){
+  renderKpis();
+  renderGanttGeneral();
+  renderSiteSelect(); renderSiteTab();
+  renderResourceTable(); renderUtilCards(); renderResourceBySite();
+  renderScenarioTab();
+  renderCostTab();
+  renderExplain();
+}
+
+document.getElementById('startDate').onchange = e=>{ state.startDate = e.target.value; renderKpis(); renderSiteTab(); };
+document.getElementById('numFronts').onchange = e=>{ state.numFronts = Math.max(1, +e.target.value||1); state.scenarioBase='Personalizado'; recompute(); renderSidebar(); };
+document.getElementById('btnGoScenarios').onclick = ()=>showTab('tab-4');
+
+renderTabNav('tab-1');
+renderSidebar();
+recompute();
+
+/* La primera vez que se abre el archivo (localStorage vacío, cualquier máquina/navegador)
+   se deja precargado el escenario que cumple el objetivo, para que la pestaña 4 nunca
+   se vea vacía en una apertura nueva. */
+if(localStorage.getItem('wms_scenarios')===null){
+  saveScenarios([{ name:'Óptimo: 32 sem (7.4m), cumple objetivo de 8 meses', ...scenarioSnapshot() }]);
+  renderScenarioTab();
+}
+
+showTab('tab-1');
+
+})();
+</script>
