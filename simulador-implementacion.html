@@ -3226,12 +3226,16 @@ renderTabNav('tab-1');
 renderSidebar();
 recompute();
 
-/* La primera vez que se abre el archivo (localStorage vacío, cualquier máquina/navegador)
-   se deja precargado el escenario que cumple el objetivo, para que la pestaña 4 nunca
-   se vea vacía en una apertura nueva. */
-if(localStorage.getItem('wms_scenarios')===null){
-  saveScenarios([{ name:'Óptimo: 32 sem (7.4m), cumple objetivo de 8 meses', ...scenarioSnapshot() }]);
-  renderScenarioTab();
+/* La primera vez que se abre el archivo en un navegador (marcada con wms_seeded, no con
+   el contenido de wms_scenarios) se deja precargado el escenario que cumple el objetivo,
+   para que la pestaña 4 nunca se vea vacía en una apertura nueva — incluso si ese navegador
+   ya tenía algo guardado en wms_scenarios de una visita anterior a una versión previa. */
+if(localStorage.getItem('wms_seeded')===null){
+  if(loadScenarios().length===0){
+    saveScenarios([{ name:'Óptimo: 32 sem (7.4m), cumple objetivo de 8 meses', ...scenarioSnapshot() }]);
+    renderScenarioTab();
+  }
+  localStorage.setItem('wms_seeded','1');
 }
 
 showTab('tab-1');
