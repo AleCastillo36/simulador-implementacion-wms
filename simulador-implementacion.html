@@ -1,116 +1,157 @@
 ﻿<title>Simulador de Implementación WMS — Radec</title>
 <meta charset="UTF-8">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%A6%3C/text%3E%3C/svg%3E">
 <style>
   :root{
-    --bg:#f4f6f9; --panel:#ffffff; --ink:#1c2530; --sub:#5b6b7c; --line:#e1e6ec;
-    --brand:#0f4c81; --brand-light:#e7f0f9; --good:#1a8754; --good-bg:#e6f6ee;
-    --bad:#c0392b; --bad-bg:#fdeceb; --warn:#b8860b; --warn-bg:#fff6e0;
-    --mx:#0f4c81; --co:#c9902f; --shadow:0 1px 3px rgba(20,30,45,.08), 0 1px 2px rgba(20,30,45,.06);
+    --bg:#eef1f6; --panel:#ffffff; --ink:#1a2333; --sub:#5b6b7c; --sub2:#8592a3; --line:#e3e8ef;
+    --brand:#0f4c81; --brand-2:#1668ac; --brand-light:#e7f0f9; --good:#158a5b; --good-bg:#e5f7ee;
+    --bad:#c0392b; --bad-bg:#fdeceb; --warn:#a8720a; --warn-bg:#fff5e0;
+    --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:24px; --sp-6:32px;
+    --r-sm:6px; --r-md:10px; --r-lg:14px;
+    --shadow:0 1px 2px rgba(20,30,45,.05), 0 2px 8px rgba(20,30,45,.06);
+    --shadow-hover:0 2px 4px rgba(20,30,45,.07), 0 6px 18px rgba(20,30,45,.10);
+    --ease:cubic-bezier(.2,.7,.3,1);
   }
   *{box-sizing:border-box;}
-  body{margin:0;font-family:"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;}
-  h1,h2,h3,h4{margin:0 0 6px 0;font-weight:600;}
-  header.top{background:linear-gradient(135deg,#0f4c81,#123a63);color:#fff;padding:18px 24px;box-shadow:var(--shadow);}
-  header.top h1{font-size:19px;letter-spacing:.2px;}
-  header.top .sub{font-size:12.5px;opacity:.85;margin-top:2px;}
-  .kpis{display:flex;gap:12px;margin-top:14px;flex-wrap:wrap;}
-  .kpi{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:9px 14px;min-width:150px;flex:1 1 150px;max-width:260px;}
-  .kpi .lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;opacity:.8;}
-  .kpi .val{font-size:18px;font-weight:700;margin-top:2px;}
-  .kpi.badge-ok{background:var(--good-bg);border-color:var(--good);}
+  html{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.5;}
+  h1,h2,h3,h4{margin:0 0 var(--sp-1) 0;font-weight:650;letter-spacing:-.1px;}
+  a{color:var(--brand-2);}
+  ::selection{background:var(--brand-light);color:var(--brand);}
+  ::-webkit-scrollbar{width:10px;height:10px;}
+  ::-webkit-scrollbar-thumb{background:rgba(91,107,124,.35);border-radius:20px;border:2px solid transparent;background-clip:padding-box;}
+  ::-webkit-scrollbar-thumb:hover{background:rgba(91,107,124,.55);background-clip:padding-box;}
+
+  header.top{background:linear-gradient(150deg,#0d3f6d,#123a63 55%,#0f4c81);color:#fff;padding:var(--sp-5) var(--sp-6);box-shadow:0 4px 20px rgba(10,30,55,.18);position:relative;}
+  header.top::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 85% -20%,rgba(255,255,255,.10),transparent 55%);pointer-events:none;}
+  header.top h1{font-size:21px;letter-spacing:-.2px;}
+  header.top .sub{font-size:12.5px;opacity:.82;margin-top:3px;}
+  header.top .sub code{background:rgba(255,255,255,.14);padding:1px 6px;border-radius:4px;font-size:11.5px;}
+  .kpis{display:flex;gap:var(--sp-3);margin-top:var(--sp-4);flex-wrap:wrap;}
+  .kpi{background:rgba(255,255,255,.07);backdrop-filter:blur(2px);border:1px solid rgba(255,255,255,.16);border-radius:var(--r-md);padding:11px 16px;min-width:150px;flex:1 1 150px;max-width:260px;transition:transform .18s var(--ease),background .18s;}
+  .kpi:hover{background:rgba(255,255,255,.11);transform:translateY(-1px);}
+  .kpi .lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.7px;opacity:.75;font-weight:600;}
+  .kpi .val{font-size:19px;font-weight:700;margin-top:3px;letter-spacing:-.2px;}
+  .kpi.badge-ok{background:var(--good-bg);border-color:rgba(21,138,91,.4);}
   .kpi.badge-ok .val,.kpi.badge-ok .lbl{color:var(--good);}
-  .kpi.badge-bad{background:var(--bad-bg);border-color:var(--bad);}
+  .kpi.badge-bad{background:var(--bad-bg);border-color:rgba(192,57,43,.4);}
   .kpi.badge-bad .val,.kpi.badge-bad .lbl{color:var(--bad);}
 
-  #objectiveBanner{margin-top:10px;padding:9px 14px;border-radius:10px;font-size:12.5px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
-  #objectiveBanner.ok{background:rgba(26,135,84,.18);border:1px solid rgba(26,135,84,.5);}
+  #objectiveBanner{margin-top:var(--sp-3);padding:11px 16px;border-radius:var(--r-md);font-size:12.5px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;line-height:1.5;}
+  #objectiveBanner.ok{background:rgba(21,138,91,.16);border:1px solid rgba(45,180,130,.45);}
   #objectiveBanner b{color:#fff;}
-  #objectiveBanner button{border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.1);color:#fff;border-radius:6px;padding:4px 10px;font-size:11.5px;cursor:pointer;font-weight:600;}
-  #objectiveBanner button:hover{background:rgba(255,255,255,.22);}
+  #objectiveBanner button{border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.12);color:#fff;border-radius:var(--r-sm);padding:5px 12px;font-size:11.5px;cursor:pointer;font-weight:600;transition:background .15s,transform .15s var(--ease);white-space:nowrap;}
+  #objectiveBanner button:hover{background:rgba(255,255,255,.24);transform:translateY(-1px);}
 
-  .layout{display:grid;grid-template-columns:300px 1fr;gap:16px;padding:16px 20px;align-items:start;}
-  aside.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:var(--shadow);position:sticky;top:16px;max-height:calc(100vh - 32px);overflow-y:auto;}
-  aside.panel h3{font-size:12.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--sub);border-bottom:1px solid var(--line);padding-bottom:6px;margin-bottom:10px;}
-  .field{margin-bottom:14px;}
-  .field label{display:block;font-size:12px;color:var(--sub);margin-bottom:4px;font-weight:600;}
-  .field input[type=number],.field input[type=date],.field select{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font-size:13px;background:#fbfcfe;}
+  .layout{display:grid;grid-template-columns:300px 1fr;gap:var(--sp-4);padding:var(--sp-4) var(--sp-5);align-items:start;}
+  aside.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);padding:var(--sp-4);box-shadow:var(--shadow);position:sticky;top:var(--sp-4);max-height:calc(100vh - 32px);overflow-y:auto;}
+  aside.panel h3{font-size:11.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--sub2);border-bottom:1px solid var(--line);padding-bottom:var(--sp-2);margin-bottom:var(--sp-3);font-weight:700;}
+  .field{margin-bottom:var(--sp-4);}
+  .field label{display:block;font-size:12px;color:var(--sub);margin-bottom:5px;font-weight:600;}
+  .field input[type=number],.field input[type=date],.field select{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:var(--r-sm);font-size:13px;background:#fbfcfe;transition:border-color .15s,box-shadow .15s;}
+  .field input:focus,.field select:focus,input.cell-input:focus,select.cell-select:focus{outline:none;border-color:var(--brand-2);box-shadow:0 0 0 3px rgba(22,104,172,.15);}
   .scenario-btns{display:flex;gap:6px;flex-wrap:wrap;}
-  .scenario-btns button{flex:1;padding:7px 6px;border:1px solid var(--brand);background:var(--brand-light);color:var(--brand);border-radius:6px;font-size:12px;cursor:pointer;font-weight:600;}
-  .scenario-btns button.active{background:var(--brand);color:#fff;}
-  .order-list{list-style:none;margin:0;padding:0;max-height:340px;overflow-y:auto;border:1px solid var(--line);border-radius:8px;}
-  .order-list li{display:flex;align-items:center;gap:6px;padding:6px 8px;border-bottom:1px solid var(--line);font-size:12.5px;}
+  .scenario-btns button{flex:1;padding:8px 6px;border:1px solid var(--brand);background:var(--brand-light);color:var(--brand);border-radius:var(--r-sm);font-size:12px;cursor:pointer;font-weight:600;transition:background .15s,color .15s,transform .1s;}
+  .scenario-btns button:hover{transform:translateY(-1px);}
+  .scenario-btns button.active{background:var(--brand);color:#fff;box-shadow:0 2px 8px rgba(15,76,129,.35);}
+  .order-list{list-style:none;margin:0;padding:0;max-height:340px;overflow-y:auto;border:1px solid var(--line);border-radius:var(--r-sm);}
+  .order-list li{display:flex;align-items:center;gap:6px;padding:7px 9px;border-bottom:1px solid var(--line);font-size:12.5px;transition:background .12s;}
+  .order-list li:hover{background:var(--brand-light);}
   .order-list li:last-child{border-bottom:none;}
-  .order-list .tag{width:8px;height:8px;border-radius:50%;flex:none;}
+  .order-list .tag{width:8px;height:8px;border-radius:50%;flex:none;box-shadow:0 0 0 2px rgba(0,0,0,.04);}
   .order-list .name{flex:1;}
-  .order-list button{border:1px solid var(--line);background:#fff;border-radius:5px;width:22px;height:22px;cursor:pointer;font-size:11px;line-height:1;color:var(--sub);}
-  .order-list button:hover{background:var(--brand-light);color:var(--brand);}
-  .note{font-size:11.5px;color:var(--sub);line-height:1.4;margin-top:6px;}
+  .order-list button{border:1px solid var(--line);background:#fff;border-radius:var(--r-sm);width:23px;height:23px;cursor:pointer;font-size:11px;line-height:1;color:var(--sub);transition:background .15s,color .15s;}
+  .order-list button:hover{background:var(--brand);color:#fff;border-color:var(--brand);}
+  .order-list button:disabled{opacity:.35;cursor:default;}
+  .order-list button:disabled:hover{background:#fff;color:var(--sub);border-color:var(--line);}
+  .note{font-size:11.5px;color:var(--sub2);line-height:1.5;margin-top:var(--sp-2);}
 
   main.content{min-width:0;}
-  nav.tabs{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:6px;margin-bottom:14px;box-shadow:var(--shadow);flex-wrap:wrap;}
-  nav.tabs button{flex:1;padding:9px 10px;border:none;background:transparent;border-radius:8px;font-size:12.5px;font-weight:600;color:var(--sub);cursor:pointer;white-space:nowrap;}
-  nav.tabs button.active{background:var(--brand);color:#fff;}
-  section.tab{display:none;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;box-shadow:var(--shadow);}
+  nav.tabs{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);padding:6px;margin-bottom:var(--sp-4);box-shadow:var(--shadow);flex-wrap:wrap;}
+  nav.tabs button{flex:1;padding:10px 10px;border:none;background:transparent;border-radius:var(--r-sm);font-size:12.5px;font-weight:600;color:var(--sub);cursor:pointer;white-space:nowrap;transition:background .15s,color .15s;}
+  nav.tabs button:hover{background:var(--brand-light);color:var(--brand);}
+  nav.tabs button.active{background:var(--brand);color:#fff;box-shadow:0 2px 8px rgba(15,76,129,.3);}
+  nav.tabs button.active:hover{background:var(--brand);}
+  section.tab{display:none;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);padding:var(--sp-5) var(--sp-5);box-shadow:var(--shadow);animation:fadeIn .2s var(--ease);}
   section.tab.active{display:block;}
-  section.tab h2{font-size:16px;color:var(--brand);}
-  section.tab .desc{font-size:12.5px;color:var(--sub);margin-bottom:14px;}
+  section.tab h2{font-size:17px;color:var(--brand);letter-spacing:-.2px;}
+  section.tab .desc{font-size:12.5px;color:var(--sub);margin-bottom:var(--sp-4);max-width:74ch;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(3px);}to{opacity:1;transform:none;}}
 
   table{width:100%;border-collapse:collapse;font-size:12.5px;}
-  table th{background:#f0f3f7;text-align:left;padding:7px 8px;font-size:11px;text-transform:uppercase;letter-spacing:.3px;color:var(--sub);border-bottom:2px solid var(--line);position:sticky;top:0;}
-  table td{padding:6px 8px;border-bottom:1px solid var(--line);}
-  table tbody tr:hover{background:#f8fafc;}
+  table th{background:#eff3f8;text-align:left;padding:9px 10px;font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--sub);border-bottom:2px solid var(--line);position:sticky;top:0;font-weight:700;}
+  table td{padding:8px 10px;border-bottom:1px solid var(--line);}
+  table tbody tr{transition:background .1s;}
+  table tbody tr:hover{background:var(--brand-light);}
   .num{text-align:right;font-variant-numeric:tabular-nums;}
   .center{text-align:center;}
-  .scroll-x{overflow-x:auto;}
+  .scroll-x{overflow-x:auto;border-radius:var(--r-sm);}
   .scroll-y{max-height:520px;overflow-y:auto;}
 
-  .gantt-row{display:flex;align-items:center;margin-bottom:3px;}
-  .gantt-label{width:170px;flex:none;font-size:11.5px;padding-right:8px;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .gantt-track{flex:1;position:relative;height:22px;background:#f0f3f7;border-radius:5px;}
-  .gantt-seg{position:absolute;top:1px;bottom:1px;border-radius:4px;font-size:9.5px;color:#fff;display:flex;align-items:center;padding-left:4px;overflow:hidden;white-space:nowrap;opacity:.95;}
-  .gantt-axis{display:flex;margin:8px 0 6px 178px;font-size:10.5px;color:var(--sub);position:relative;height:14px;}
+  .gantt-row{display:flex;align-items:center;margin-bottom:4px;}
+  .gantt-label{width:170px;flex:none;font-size:11.5px;padding-right:var(--sp-2);color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .gantt-track{flex:1;position:relative;height:23px;background:#eef1f6;border-radius:6px;}
+  .gantt-seg{position:absolute;top:1px;bottom:1px;border-radius:5px;font-size:9.5px;color:#fff;display:flex;align-items:center;padding-left:6px;overflow:hidden;white-space:nowrap;box-shadow:0 1px 2px rgba(0,0,0,.12);transition:filter .12s;}
+  .gantt-seg:hover{filter:brightness(1.08);}
+  .gantt-axis{display:flex;margin:var(--sp-2) 0 6px 178px;font-size:10.5px;color:var(--sub2);position:relative;height:14px;}
   .gantt-today{position:absolute;top:0;bottom:0;width:2px;background:var(--bad);}
 
-  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:11.5px;color:var(--sub);}
-  .legend span{display:inline-flex;align-items:center;gap:5px;}
+  .legend{display:flex;gap:var(--sp-4);flex-wrap:wrap;margin-top:var(--sp-3);font-size:11.5px;color:var(--sub);}
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
   .legend i{width:10px;height:10px;border-radius:3px;display:inline-block;}
 
-  .pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:700;}
+  .pill{display:inline-block;padding:3px 9px;border-radius:20px;font-size:10.5px;font-weight:700;letter-spacing:.2px;}
   .pill-ok{background:var(--good-bg);color:var(--good);}
   .pill-bad{background:var(--bad-bg);color:var(--bad);}
   .pill-warn{background:var(--warn-bg);color:var(--warn);}
 
-  input.cell-input{width:64px;padding:4px 6px;border:1px solid var(--line);border-radius:5px;font-size:12px;text-align:right;}
-  select.cell-select{padding:4px 6px;border:1px solid var(--line);border-radius:5px;font-size:12px;}
+  input.cell-input{width:66px;padding:5px 7px;border:1px solid var(--line);border-radius:var(--r-sm);font-size:12px;text-align:right;transition:border-color .15s,box-shadow .15s;}
+  select.cell-select{padding:5px 7px;border:1px solid var(--line);border-radius:var(--r-sm);font-size:12px;transition:border-color .15s,box-shadow .15s;}
 
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
-  .card{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:#fbfcfe;}
-  .card h4{font-size:12px;color:var(--sub);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;}
-  .barh{display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:11.5px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-4);}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--sp-4);}
+  .card{border:1px solid var(--line);border-radius:var(--r-md);padding:14px 16px;background:#fbfcfe;transition:box-shadow .18s,transform .18s var(--ease);}
+  .card:hover{box-shadow:var(--shadow-hover);}
+  .card h4{font-size:11.5px;color:var(--sub2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:var(--sp-2);font-weight:700;}
+  .barh{display:flex;align-items:center;gap:var(--sp-2);margin-bottom:6px;font-size:11.5px;}
   .barh .name{width:150px;flex:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--sub);}
-  .barh .track{flex:1;background:#eef1f5;border-radius:4px;height:14px;position:relative;}
-  .barh .fill{background:var(--brand);height:100%;border-radius:4px;}
-  .barh .amt{width:90px;text-align:right;flex:none;font-variant-numeric:tabular-nums;}
+  .barh .track{flex:1;background:#eef1f5;border-radius:5px;height:15px;position:relative;overflow:hidden;}
+  .barh .fill{background:linear-gradient(90deg,var(--brand),var(--brand-2));height:100%;border-radius:5px;transition:width .3s var(--ease);}
+  .barh .amt{width:90px;text-align:right;flex:none;font-variant-numeric:tabular-nums;font-weight:600;}
 
-  .save-row{display:flex;gap:8px;margin-bottom:14px;}
-  .save-row input{flex:1;padding:7px 10px;border:1px solid var(--line);border-radius:6px;}
-  .save-row button, .btn{padding:7px 14px;border:none;background:var(--brand);color:#fff;border-radius:6px;font-weight:600;cursor:pointer;font-size:12.5px;}
+  .save-row{display:flex;gap:var(--sp-2);margin-bottom:var(--sp-4);}
+  .save-row input{flex:1;padding:8px 11px;border:1px solid var(--line);border-radius:var(--r-sm);transition:border-color .15s,box-shadow .15s;}
+  .save-row input:focus{outline:none;border-color:var(--brand-2);box-shadow:0 0 0 3px rgba(22,104,172,.15);}
+  .save-row button, .btn{padding:8px 15px;border:none;background:var(--brand);color:#fff;border-radius:var(--r-sm);font-weight:600;cursor:pointer;font-size:12.5px;transition:background .15s,transform .12s var(--ease),box-shadow .15s;}
+  .save-row button:hover, .btn:hover{background:var(--brand-2);transform:translateY(-1px);box-shadow:0 3px 10px rgba(15,76,129,.25);}
   .btn.secondary{background:#fff;border:1px solid var(--brand);color:var(--brand);}
+  .btn.secondary:hover{background:var(--brand-light);box-shadow:none;}
   .btn.danger{background:#fff;border:1px solid var(--bad);color:var(--bad);}
+  .btn.danger:hover{background:var(--bad-bg);box-shadow:none;}
 
-  details.explain{border:1px solid var(--line);border-radius:8px;margin-bottom:8px;overflow:hidden;}
-  details.explain summary{padding:10px 12px;cursor:pointer;font-weight:600;background:#f8fafc;font-size:13px;}
-  details.explain .body{padding:10px 14px;font-size:12.5px;line-height:1.55;color:#31404f;}
-  details.explain .body ul{margin:4px 0 4px 18px;padding:0;}
-  .warn-box{background:var(--warn-bg);border:1px solid var(--warn);border-radius:8px;padding:10px 12px;font-size:12px;color:#7a5c00;margin-bottom:10px;}
+  details.explain{border:1px solid var(--line);border-radius:var(--r-sm);margin-bottom:var(--sp-2);overflow:hidden;transition:box-shadow .15s;}
+  details.explain[open]{box-shadow:var(--shadow);}
+  details.explain summary{padding:11px 14px;cursor:pointer;font-weight:650;background:#f8fafc;font-size:13px;list-style:none;transition:background .15s;}
+  details.explain summary::-webkit-details-marker{display:none;}
+  details.explain summary::before{content:"▸";display:inline-block;margin-right:8px;color:var(--brand);transition:transform .15s var(--ease);font-size:11px;}
+  details.explain[open] summary::before{transform:rotate(90deg);}
+  details.explain summary:hover{background:var(--brand-light);}
+  details.explain .body{padding:12px 16px 14px 32px;font-size:12.5px;line-height:1.6;color:#31404f;}
+  details.explain .body ul,details.explain .body ol{margin:6px 0 6px 18px;padding:0;}
+  details.explain .body li{margin-bottom:4px;}
+  .warn-box{background:var(--warn-bg);border:1px solid rgba(168,114,10,.35);border-radius:var(--r-sm);padding:11px 14px;font-size:12px;color:#7a5c00;margin-bottom:var(--sp-3);line-height:1.55;}
 
   @media (prefers-color-scheme: dark){
-    :root{--bg:#12161c;--panel:#1a212b;--ink:#e7edf5;--sub:#93a1b1;--line:#2b3644;--brand-light:#1c2f45;--good-bg:#123326;--bad-bg:#3a1917;--warn-bg:#3a2f0f;--warn:#e0b23c;}
-    table th{background:#20293580;}
-    .card,input.cell-input,.field input,.field select,.save-row input{background:#141a22;color:var(--ink);border-color:var(--line);}
+    :root{--bg:#0f1319;--panel:#171e27;--ink:#e7edf5;--sub:#93a1b1;--sub2:#6e7c8c;--line:#2b3644;--brand-light:#1c2f45;--good-bg:#123326;--bad-bg:#3a1917;--warn-bg:#3a2f0f;--warn:#e0b23c;}
+    table th{background:#1c2530;}
+    .card,input.cell-input,.field input,.field select,.save-row input,select.cell-select{background:#141a22;color:var(--ink);border-color:var(--line);}
     .gantt-track,.barh .track{background:#232d3a;}
     details.explain summary{background:#141a22;}
+    details.explain summary:hover{background:#1c2530;}
+    details.explain .body{color:var(--ink);}
+    table tbody tr:hover{background:#1c2530;}
+    .order-list li:hover{background:#1c2530;}
+    ::-webkit-scrollbar-thumb{background:rgba(147,161,177,.3);}
   }
 </style>
 
@@ -151,14 +192,14 @@
     <nav class="tabs" id="tabNav"></nav>
 
     <section class="tab" id="tab-1">
-      <h2>1 · Plan de trabajo general del programa</h2>
+      <h2>📊 1 · Plan de trabajo general del programa</h2>
       <div class="desc">Vista de inicio a fin de todo el programa: cada barra es un sitio, coloreado por cluster, distribuido en los frentes paralelos que definiste.</div>
       <div id="ganttGeneral"></div>
       <div class="legend" id="legendGeneral"></div>
     </section>
 
     <section class="tab" id="tab-2">
-      <h2>2 · Plan de trabajo por sitio</h2>
+      <h2>📍 2 · Plan de trabajo por sitio</h2>
       <div class="desc">Selecciona un sitio para ver el detalle fase por fase (fechas, duración, madurez aplicada).</div>
       <div class="field" style="max-width:280px;">
         <label for="siteSelect">Sitio</label>
@@ -172,7 +213,7 @@
     </section>
 
     <section class="tab" id="tab-3">
-      <h2>3 · Uso de recursos por sitio y general</h2>
+      <h2>👥 3 · Uso de recursos por sitio y general</h2>
       <div class="desc">Edita la dotación (headcount) por rol — es la palanca principal de capacidad. La utilización compara la demanda pico generada por tu cronograma contra la dotación disponible.</div>
       <div class="scroll-x">
         <table id="resourceTable"></table>
@@ -184,7 +225,7 @@
     </section>
 
     <section class="tab" id="tab-4">
-      <h2>4 · Guardar y comparar escenarios</h2>
+      <h2>📁 4 · Guardar y comparar escenarios</h2>
 
       <h4>Comparación automática (siempre visible, no depende de guardar nada)</h4>
       <div class="desc">Se recalcula en vivo cada vez, comparando la dotación "Actual" y "Escenario 1" del archivo (ambas a 3 frentes, tal cual vienen) contra el escenario óptimo encontrado — ver el proceso de búsqueda en la pestaña Explicación.</div>
@@ -198,11 +239,19 @@
       </div>
       <div class="scroll-x"><table id="scenarioCompareTable"></table></div>
       <div class="note" style="margin-top:8px;">El escenario que cumple ≤ 8 meses con el menor costo se resalta en verde.</div>
+
+      <div style="margin-top:14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <button class="btn secondary" id="btnExportScenarios">⬇ Exportar escenarios guardados</button>
+        <button class="btn secondary" id="btnImportScenarios">⬆ Importar escenarios</button>
+        <input type="file" id="importFileInput" accept="application/json" style="display:none;">
+        <span class="note" style="margin:0;">Tus escenarios guardados viven solo en este navegador (localStorage). Expórtalos a un archivo si quieres llevarlos a otro equipo, o respaldarlos.</span>
+      </div>
     </section>
 
     <section class="tab" id="tab-5">
-      <h2>5 · Resumen de costos</h2>
-      <div class="desc">Costo total del escenario actual, desagregado por sitio y por tipo de recurso. No incluye "Beneficio por mes" (es un beneficio, no un costo).</div>
+      <h2>💰 5 · Resumen de costos</h2>
+      <div class="desc">Costo total del escenario actual, desagregado por sitio y por tipo de recurso. No incluye "Beneficio por mes" (es un beneficio, no un costo). Todo se reporta en pesos (MXN).</div>
+      <div class="warn-box">La hoja "Financials" del archivo está en <b>dólares (USD)</b>; "Resource Master" trae el costo de mano de obra en <b>pesos (MXN)</b> — son monedas distintas en el mismo archivo. Los montos de implementación única que ves aquí ya están convertidos a pesos, al tipo de cambio de <b>18.00 MXN/USD</b> (indicado por Radec). Detalle completo en la pestaña Explicación → "Financials (USD)".</div>
       <div class="card" style="margin-bottom:16px;">
         <h4>Palancas de costo único por sitio (etiquetado / wifi)</h4>
         <div class="scroll-x"><table id="costLeverTable"></table></div>
@@ -225,7 +274,7 @@
     </section>
 
     <section class="tab" id="tab-6">
-      <h2>Explicación del archivo y supuestos del simulador</h2>
+      <h2>📖 Explicación del archivo y supuestos del simulador</h2>
       <div class="desc">Qué contiene cada pestaña del Excel, cómo se conecta con el motor de cálculo, y qué supuestos usa el simulador donde el archivo no lo especifica.</div>
       <div id="explainBody"></div>
     </section>
@@ -246,6 +295,11 @@ const PHASES = RAW_DATA.implementationPhases;
 const ALLOC = RAW_DATA.phaseResourceAllocation;
 
 const WEEKS_PER_MONTH = 4.345;
+/* La hoja "Financials (USD)" del archivo está en dólares; "Resource Master" trae
+   "Average Monthly Cost (MXN)" en pesos. Son monedas distintas en el mismo archivo —
+   se convierte USD a MXN con este tipo de cambio (dato de negocio, no supuesto del
+   modelo) antes de sumarlo al costo de mano de obra, para reportar todo en pesos. */
+const USD_TO_MXN = 18.00;
 const PHASE_ORDER = ["Site Readiness","Design Adaptation","Functional Review","UAT","Training","DIALT","Go Live","Hypercare"];
 const CLUSTER_COLORS = {1:"#0f4c81",2:"#c9902f",3:"#6a8caf",4:"#8a5fb0"};
 
@@ -254,6 +308,56 @@ const siteBySite = {}; SITES.forEach(s=>siteBySite[s.Site]=s);
 
 function roleRows(roleName){ return RES_RAW.filter(r=>r.Role===roleName); }
 const ROLE_NAMES = [...new Set(RES_RAW.map(r=>r.Role))];
+
+/* Traducciones para mostrar en pantalla. Las claves internas del motor (nombres de
+   rol, de fase, códigos de sitio) NUNCA cambian de idioma — son valores literales
+   del archivo fuente y se usan para cruzar datos entre hojas. Solo la etiqueta que
+   ve el usuario se traduce, con el término original del archivo entre paréntesis la
+   primera vez que aparece cada uno (tabla de recursos en la pestaña 3, y el detalle
+   de fases por sitio en la pestaña 2), para no perder la trazabilidad contra el Excel. */
+const ROLE_ES = {
+  "Solution Architect":"Arquitecto de Soluciones",
+  "Warehouse Manager Org A":"Gerente de Almacén Org A",
+  "Project Manager Country B":"Gerente de Proyecto País B",
+  "Project Manager Country A":"Gerente de Proyecto País A",
+  "Change Management Lead":"Líder de Gestión del Cambio",
+  "Infrastructure Lead":"Líder de Infraestructura",
+  "Functional Lead":"Líder Funcional",
+  "SAP Integrations Lead":"Líder de Integraciones SAP",
+  "SAP Integrations Specialist":"Especialista en Integraciones SAP",
+  "Azure Lead":"Líder de Azure",
+  "Azure Specialist":"Especialista en Azure",
+  "Testing Lead":"Líder de Pruebas",
+  "Trainers":"Capacitadores",
+  "Functional Lead Vendor A":"Líder Funcional Proveedor A",
+  "Support Lead":"Líder de Soporte"
+};
+const PHASE_ES = {
+  "Site Readiness":"Preparación del Sitio",
+  "Design Adaptation":"Adaptación de Diseño",
+  "Functional Review":"Revisión Funcional",
+  "UAT":"UAT",
+  "Training":"Capacitación",
+  "DIALT":"DIALT",
+  "Go Live":"Salida en Vivo",
+  "Hypercare":"Hipercuidado"
+};
+const WORKMODE_ES = {Remote:"Remoto", Hybrid:"Híbrido", Onsite:"Presencial"};
+const MULTITASK_ES = {Yes:"Sí", No:"No", Partial:"Parcial"};
+const ORIGIN_ES = {Internal:"Interno", External:"Externo"};
+const COSTTYPE_ES = {Fixed:"Fijo", Flexible:"Flexible"};
+const COUNTRY_ES = {Mexico:"México", Colombia:"Colombia"};
+
+function roleLabelFull(name){ const es = ROLE_ES[name]; return es ? `${es} (${name})` : name; }
+function roleLabel(name){ return ROLE_ES[name] || name; }
+function phaseLabelFull(name){ const es = PHASE_ES[name]; return (es && es!==name) ? `${es} (${name})` : name; }
+function phaseLabel(name){ return PHASE_ES[name] || name; }
+function siteLabel(code){ return code.replace("Site ", "Sitio "); }
+function workModeLabel(v){ return WORKMODE_ES[v] || v; }
+function multitaskLabel(v){ return MULTITASK_ES[v] || v; }
+function originLabel(v){ return ORIGIN_ES[v] || v; }
+function costTypeLabel(v){ return COSTTYPE_ES[v] || v; }
+function countryLabel(v){ return COUNTRY_ES[v] || v; }
 
 function phasesFor(cluster, maturity){
   return PHASES.filter(p=>p.Cluster===cluster && p.DeploymentMaturity===maturity).sort((a,b)=>a.Sequence-b.Sequence);
@@ -461,7 +565,8 @@ function computeCost(st, sim){
     const labeling = st.laborChoice[code]==='manual' ? f.ManualLabeling : f.LabelPrintersLabelers;
     const wifiMap = {full:f.WifiFull, optimized:f.WifiFullOptimized, prioritized:f.WifiPrioritized};
     const wifi = wifiMap[st.wifiChoice[code]];
-    oneTimeBySite[code] = f.ImplementationCosts + f.Devices + f.ForkliftStructure + f.WarehouseSignage + f.Labels + labeling + wifi;
+    const usdTotal = f.ImplementationCosts + f.Devices + f.ForkliftStructure + f.WarehouseSignage + f.Labels + labeling + wifi;
+    oneTimeBySite[code] = usdTotal * USD_TO_MXN;
   });
   const oneTimeTotal = Object.values(oneTimeBySite).reduce((a,b)=>a+b,0);
 
@@ -529,8 +634,8 @@ function renderKpis(){
   const el = document.getElementById('kpiBar');
   if(currentSim.totalProgramWeeks===null){
     el.innerHTML = `
-      <div class="kpi badge-bad" style="min-width:100%;"><div class="lbl">Dotación insuficiente</div>
-      <div class="val" style="font-size:14px;">${currentSim.stalled.length} sitio(s) nunca alcanzan la capacidad necesaria para avanzar de fase: ${currentSim.stalled.join(', ')}. Sube la dotación de los roles saturados en la pestaña 3, o reduce los frentes en paralelo.</div></div>
+      <div class="kpi badge-bad" style="min-width:100%;"><div class="lbl">⚠️ Dotación insuficiente</div>
+      <div class="val" style="font-size:14px;">${currentSim.stalled.length} sitio(s) nunca alcanzan la capacidad necesaria para avanzar de fase: ${currentSim.stalled.map(siteLabel).join(', ')}. Sube la dotación de los roles saturados en la pestaña 3, o reduce los frentes en paralelo.</div></div>
     `;
     return;
   }
@@ -539,12 +644,12 @@ function renderKpis(){
   const months = currentSim.totalProgramWeeks / WEEKS_PER_MONTH;
   const meets8 = months <= 8.0001;
   el.innerHTML = `
-    <div class="kpi"><div class="lbl">Inicio del programa</div><div class="val" style="font-size:14px;">${fmtDate(startD)}</div></div>
-    <div class="kpi"><div class="lbl">Fecha de término</div><div class="val" style="font-size:14px;">${fmtDate(endD)}</div></div>
-    <div class="kpi"><div class="lbl">Duración</div><div class="val">${currentSim.totalProgramWeeks} sem <span style="font-size:12px;opacity:.8;">(${months.toFixed(1)} m)</span></div></div>
-    <div class="kpi ${meets8?'badge-ok':'badge-bad'}"><div class="lbl">¿Cumple ≤ 8 meses?</div><div class="val">${meets8?'Sí ✓':'No ✗'}</div></div>
-    <div class="kpi"><div class="lbl">Costo total</div><div class="val">${fmtMoney(currentCost.grandTotal)}</div></div>
-    <div class="kpi"><div class="lbl">Escenario</div><div class="val" style="font-size:14px;">${state.scenarioBase}</div></div>
+    <div class="kpi"><div class="lbl">🚀 Inicio del programa</div><div class="val" style="font-size:14px;">${fmtDate(startD)}</div></div>
+    <div class="kpi"><div class="lbl">🏁 Fecha de término</div><div class="val" style="font-size:14px;">${fmtDate(endD)}</div></div>
+    <div class="kpi"><div class="lbl">⏱ Duración</div><div class="val">${currentSim.totalProgramWeeks} sem <span style="font-size:12px;opacity:.8;">(${months.toFixed(1)} m)</span></div></div>
+    <div class="kpi ${meets8?'badge-ok':'badge-bad'}"><div class="lbl">🎯 ¿Cumple ≤ 8 meses?</div><div class="val">${meets8?'Sí ✓':'No ✗'}</div></div>
+    <div class="kpi"><div class="lbl">💰 Costo total</div><div class="val">${fmtMoney(currentCost.grandTotal)}</div></div>
+    <div class="kpi"><div class="lbl">📁 Escenario</div><div class="val" style="font-size:14px;">${state.scenarioBase}</div></div>
   `;
 }
 
@@ -567,7 +672,7 @@ function renderOrderList(){
     const s = siteBySite[code];
     return `<li>
       <span class="tag" style="background:${CLUSTER_COLORS[s.Cluster]}"></span>
-      <span class="name">${i+1}. ${code} <span style="color:var(--sub)">(${s.Country}, C${s.Cluster})</span></span>
+      <span class="name">${i+1}. ${siteLabel(code)} <span style="color:var(--sub)">(${countryLabel(s.Country)}, C${s.Cluster})</span></span>
       <button data-i="${i}" data-dir="-1" ${i===0?'disabled':''}>↑</button>
       <button data-i="${i}" data-dir="1" ${i===state.siteOrder.length-1?'disabled':''}>↓</button>
     </li>`;
@@ -589,12 +694,12 @@ function renderSidebar(){
 
 /* ---------------- TABS ---------------- */
 const TABS = [
-  ['tab-1','1 · Programa general'],
-  ['tab-2','2 · Plan por sitio'],
-  ['tab-3','3 · Recursos'],
-  ['tab-4','4 · Escenarios'],
-  ['tab-5','5 · Costos'],
-  ['tab-6','Explicación'],
+  ['tab-1','📊 1 · Programa general'],
+  ['tab-2','📍 2 · Plan por sitio'],
+  ['tab-3','👥 3 · Recursos'],
+  ['tab-4','📁 4 · Escenarios'],
+  ['tab-5','💰 5 · Costos'],
+  ['tab-6','📖 Explicación'],
 ];
 function renderTabNav(active){
   const el = document.getElementById('tabNav');
@@ -613,18 +718,18 @@ function renderGanttGeneral(){
   const rows = currentSim.siteResult.map(s=>({...s})).sort((a,b)=>(a.startWeek??9999)-(b.startWeek??9999));
   const html = rows.map(s=>{
     if(s.startWeek==null){
-      return `<div class="gantt-row"><div class="gantt-label">${s.code} · ${s.site.Country}</div>
+      return `<div class="gantt-row"><div class="gantt-label">${siteLabel(s.code)} · ${countryLabel(s.site.Country)}</div>
         <div class="gantt-track"><div class="gantt-seg" style="left:0;width:100%;background:#999;">nunca arranca — falta dotación</div></div></div>`;
     }
     const end = s.endWeek ?? totalWeeks;
     const leftPct = (s.startWeek/totalWeeks)*100;
     const widthPct = Math.max(((end-s.startWeek)/totalWeeks)*100, 0.8);
     const color = s.endWeek==null ? '#c0392b' : CLUSTER_COLORS[s.site.Cluster];
-    const label = s.endWeek==null ? `${s.code} (bloqueado)` : `${s.code} (${s.maturity})`;
+    const label = s.endWeek==null ? `${siteLabel(s.code)} (bloqueado)` : `${siteLabel(s.code)} (${s.maturity})`;
     return `<div class="gantt-row">
-      <div class="gantt-label">${s.code} · ${s.site.Country}</div>
+      <div class="gantt-label">${siteLabel(s.code)} · ${countryLabel(s.site.Country)}</div>
       <div class="gantt-track">
-        <div class="gantt-seg" style="left:${leftPct}%;width:${widthPct}%;background:${color};" title="${s.code}: sem ${s.startWeek}–${end} (maturity ${s.maturity})">${label}</div>
+        <div class="gantt-seg" style="left:${leftPct}%;width:${widthPct}%;background:${color};" title="${siteLabel(s.code)}: sem ${s.startWeek}–${end} (madurez ${s.maturity})">${label}</div>
       </div>
     </div>`;
   }).join('');
@@ -647,7 +752,7 @@ function axisHtml(totalWeeks){
 function renderSiteSelect(){
   const el = document.getElementById('siteSelect');
   const cur = el.value;
-  el.innerHTML = state.siteOrder.map(c=>`<option value="${c}">${c} — ${siteBySite[c].Country}</option>`).join('');
+  el.innerHTML = state.siteOrder.map(c=>`<option value="${c}">${siteLabel(c)} — ${countryLabel(siteBySite[c].Country)}</option>`).join('');
   el.value = cur && state.siteOrder.includes(cur) ? cur : state.siteOrder[0];
   el.onchange = renderSiteTab;
 }
@@ -656,7 +761,7 @@ function renderSiteTab(){
   const sres = currentSim.siteResult.find(s=>s.code===code);
   if(!sres) return;
   if(sres.startWeek==null){
-    document.getElementById('siteDetailCards').innerHTML = `<div class="card" style="grid-column:1/-1;"><h4>Estado</h4><div style="font-size:14px;font-weight:600;color:var(--bad);">Este sitio nunca llegó a arrancar: no alcanzó la dotación necesaria para iniciar Site Readiness antes de que se agotara la simulación.</div></div>`;
+    document.getElementById('siteDetailCards').innerHTML = `<div class="card" style="grid-column:1/-1;"><h4>Estado</h4><div style="font-size:14px;font-weight:600;color:var(--bad);">Este sitio nunca llegó a arrancar: no alcanzó la dotación necesaria para iniciar ${phaseLabelFull('Site Readiness')} antes de que se agotara la simulación.</div></div>`;
     document.getElementById('ganttSite').innerHTML = '';
     document.getElementById('sitePhaseTable').innerHTML = '';
     return;
@@ -668,7 +773,7 @@ function renderSiteTab(){
   document.getElementById('siteDetailCards').innerHTML = `
     <div class="card"><h4>Inicio / Fin</h4><div style="font-size:14px;font-weight:600;">${fmtDate(startD)} → ${blocked?'<span style=\"color:var(--bad)\">bloqueado</span>':fmtDate(endD)}</div></div>
     <div class="card"><h4>Duración / Madurez</h4><div style="font-size:14px;font-weight:600;">${blocked?'—':dur+' semanas'} · Madurez ${sres.maturity}</div></div>
-    <div class="card"><h4>Cluster / País</h4><div style="font-size:14px;font-weight:600;">Cluster ${sres.site.Cluster} · ${sres.site.Country}</div></div>
+    <div class="card"><h4>Cluster / País</h4><div style="font-size:14px;font-weight:600;">Cluster ${sres.site.Cluster} · ${countryLabel(sres.site.Country)}</div></div>
   `;
   const rawRows = sres.phaseLog.map(r=>({phase:r.phase, s:r.start, e:r.end, dur: r.end!=null ? r.end-r.start : null}));
   const rows = [];
@@ -692,7 +797,7 @@ function renderSiteTab(){
     const color = r.e==null ? '#c0392b' : (r.isWait ? '#b8860b' : CLUSTER_COLORS[sres.site.Cluster]);
     const label = r.dur!=null ? (r.isWait?'espera '+r.dur+'sem':r.dur+'sem') : 'en espera de recursos';
     return `<div class="gantt-row">
-      <div class="gantt-label">${r.phase}</div>
+      <div class="gantt-label">${phaseLabel(r.phase)}</div>
       <div class="gantt-track">
         <div class="gantt-seg" style="left:${leftPct}%;width:${widthPct}%;background:${color};">${label}</div>
       </div>
@@ -700,19 +805,25 @@ function renderSiteTab(){
   }).join('') + axisHtml(totalW);
 
   const tbl = document.getElementById('sitePhaseTable');
+  const totalDur = rows.reduce((s,r)=>s+(r.dur||0),0);
   tbl.innerHTML = `<thead><tr><th>Fase</th><th>Semana inicio</th><th>Semana fin</th><th>Duración</th><th>Fecha inicio</th><th>Fecha fin</th></tr></thead>
-    <tbody>${rows.map(r=>`<tr style="${r.isWait?'color:var(--warn);font-style:italic;':''}"><td>${r.phase}</td><td class="num">${r.s}</td><td class="num">${r.e??'—'}</td><td class="num">${r.dur!=null?r.dur+' sem':'sin terminar'}</td><td>${fmtDate(addWeeks(state.startDate,r.s))}</td><td>${r.e!=null?fmtDate(addWeeks(state.startDate,r.e)):'—'}</td></tr>`).join('')}</tbody>`;
+    <tbody>${rows.map(r=>`<tr style="${r.isWait?'color:var(--warn);font-style:italic;':''}"><td>${phaseLabelFull(r.phase)}</td><td class="num">${r.s}</td><td class="num">${r.e??'—'}</td><td class="num">${r.dur!=null?r.dur+' sem':'sin terminar'}</td><td>${fmtDate(addWeeks(state.startDate,r.s))}</td><td>${r.e!=null?fmtDate(addWeeks(state.startDate,r.e)):'—'}</td></tr>`).join('')}
+    <tr style="font-weight:700;border-top:2px solid var(--line);"><td>Total</td><td></td><td></td><td class="num">${totalDur} sem</td><td></td><td></td></tr>
+    </tbody>`;
 }
 
 /* ---------------- TAB 3: RECURSOS ---------------- */
 function renderResourceTable(){
   const tbl = document.getElementById('resourceTable');
+  const totalHc = RES_RAW.reduce((s,r)=>s+(+state.headcounts[r.id]||0),0);
   tbl.innerHTML = `<thead><tr><th>Rol</th><th>Modalidad</th><th>Multitarea</th><th>Origen</th><th>Costo</th><th>Costo mensual (MXN)</th><th>Dotación</th></tr></thead>
     <tbody>${RES_RAW.map(r=>`<tr>
-      <td>${r.Role}</td><td>${r.WorkMode}</td><td>${r.CanMultitask}</td><td>${r.InternalOrExternal}</td><td>${r.FixedOrFlexibleCost}</td>
+      <td>${roleLabelFull(r.Role)}</td><td>${workModeLabel(r.WorkMode)}</td><td>${multitaskLabel(r.CanMultitask)}</td><td>${originLabel(r.InternalOrExternal)}</td><td>${costTypeLabel(r.FixedOrFlexibleCost)}</td>
       <td class="num">${fmtMoney(r.AvgMonthlyCostMXN)}</td>
       <td class="num"><input class="cell-input" type="number" min="0" step="1" data-id="${r.id}" value="${state.headcounts[r.id]}"></td>
-    </tr>`).join('')}</tbody>`;
+    </tr>`).join('')}
+    <tr style="font-weight:700;border-top:2px solid var(--line);"><td colspan="5">Total dotación (todos los roles)</td><td class="num">${totalHc}</td></tr>
+    </tbody>`;
   tbl.querySelectorAll('input').forEach(inp=>inp.onchange=()=>{
     state.headcounts[inp.dataset.id] = +inp.value || 0;
     state.scenarioBase = 'Personalizado';
@@ -728,17 +839,28 @@ function renderUtilCards(){
     const p = peak[name]||0;
     const pct = cap>0 ? (p/cap)*100 : (p>0?999:0);
     const over = pct>100;
-    return `<div class="barh"><div class="name">${name}</div><div class="track"><div class="fill" style="width:${Math.min(pct,100)}%;background:${over?'var(--bad)':'var(--brand)'}"></div></div><div class="amt">${p.toFixed(1)} / ${cap} <span class="pill ${over?'pill-bad':'pill-ok'}">${pct.toFixed(0)}%</span></div></div>`;
+    return `<div class="barh"><div class="name">${roleLabel(name)}</div><div class="track"><div class="fill" style="width:${Math.min(pct,100)}%;background:${over?'var(--bad)':'var(--brand)'}"></div></div><div class="amt">${p.toFixed(1)} / ${cap} <span class="pill ${over?'pill-bad':'pill-ok'}">${pct.toFixed(0)}%</span></div></div>`;
   }).join('');
 }
 function renderResourceBySite(){
   const tbl = document.getElementById('resourceBySiteTable');
   const rolesUsed = ROLE_NAMES.filter(r=>currentSim.siteResult.some(s=>s.demandBySite[r]>0));
-  tbl.innerHTML = `<thead><tr><th>Sitio</th>${rolesUsed.map(r=>`<th>${r}</th>`).join('')}<th>Total FTE-sem</th></tr></thead>
-    <tbody>${currentSim.siteResult.map(s=>{
+  const countries = [...new Set(currentSim.siteResult.map(s=>s.site.Country))];
+  const grandTotals = {}; rolesUsed.forEach(r=>grandTotals[r]=0); let grandTotalSum=0;
+  let bodyHtml = '';
+  countries.forEach(country=>{
+    const group = currentSim.siteResult.filter(s=>s.site.Country===country);
+    group.forEach(s=>{
       const total = rolesUsed.reduce((sum,r)=>sum+(s.demandBySite[r]||0),0);
-      return `<tr><td>${s.code}</td>${rolesUsed.map(r=>`<td class="num">${(s.demandBySite[r]||0).toFixed(1)}</td>`).join('')}<td class="num"><b>${total.toFixed(1)}</b></td></tr>`;
-    }).join('')}</tbody>`;
+      bodyHtml += `<tr><td>${siteLabel(s.code)}</td>${rolesUsed.map(r=>`<td class="num">${(s.demandBySite[r]||0).toFixed(1)}</td>`).join('')}<td class="num"><b>${total.toFixed(1)}</b></td></tr>`;
+    });
+    const subTotals = {}; rolesUsed.forEach(r=>subTotals[r]=group.reduce((s2,s)=>s2+(s.demandBySite[r]||0),0));
+    const subTotalSum = rolesUsed.reduce((s2,r)=>s2+subTotals[r],0);
+    rolesUsed.forEach(r=>grandTotals[r]+=subTotals[r]); grandTotalSum+=subTotalSum;
+    bodyHtml += `<tr style="font-weight:700;background:var(--brand-light);"><td>Subtotal ${countryLabel(country)}</td>${rolesUsed.map(r=>`<td class="num">${subTotals[r].toFixed(1)}</td>`).join('')}<td class="num">${subTotalSum.toFixed(1)}</td></tr>`;
+  });
+  bodyHtml += `<tr style="font-weight:700;border-top:2px solid var(--line);"><td>Total general</td>${rolesUsed.map(r=>`<td class="num">${grandTotals[r].toFixed(1)}</td>`).join('')}<td class="num">${grandTotalSum.toFixed(1)}</td></tr>`;
+  tbl.innerHTML = `<thead><tr><th>Sitio</th>${rolesUsed.map(r=>`<th>${roleLabel(r)}</th>`).join('')}<th>Total FTE-sem</th></tr></thead><tbody>${bodyHtml}</tbody>`;
 }
 
 /* ---------------- TAB 4: ESCENARIOS ---------------- */
@@ -808,8 +930,8 @@ function renderAutoCompare(){
   if(!el) return;
   const rows = computeFixedBaselines();
   const winner = rows.filter(r=>r.meets8).sort((a,b)=>a.cost-b.cost)[0];
-  el.innerHTML = `<thead><tr><th>Escenario</th><th>Frentes</th><th>Duración</th><th>¿Cumple ≤8 meses?</th><th>Costo total</th></tr></thead>
-    <tbody>${rows.map(r=>{
+  el.innerHTML = `<thead><tr><th>Escenario</th><th>Frentes</th><th>Duración</th><th>¿Cumple ≤8 meses?</th><th>Costo total</th><th></th></tr></thead>
+    <tbody>${rows.map((r,i)=>{
       const win = winner && r===winner;
       return `<tr style="${win?'background:var(--good-bg);':''}">
         <td>${r.name}</td>
@@ -817,8 +939,14 @@ function renderAutoCompare(){
         <td class="num">${r.weeks==null?'no completa':r.weeks+' sem ('+r.months.toFixed(1)+'m)'}</td>
         <td class="center"><span class="pill ${r.meets8?'pill-ok':'pill-bad'}">${r.meets8?'Sí':'No'}</span></td>
         <td class="num">${fmtMoney(r.cost)}</td>
+        <td><button class="btn secondary" data-i="${i}">Cargar</button></td>
       </tr>`;
     }).join('')}</tbody>`;
+  el.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+    state = JSON.parse(JSON.stringify(rows[+b.dataset.i].state));
+    recompute(); renderSidebar();
+    showTab('tab-1');
+  });
 }
 
 function renderScenarioTab(){
@@ -856,29 +984,78 @@ function renderScenarioTab(){
     state = JSON.parse(JSON.stringify(list[i].state));
     recompute(); renderSidebar();
   });
+
+  document.getElementById('btnExportScenarios').onclick = ()=>{
+    const blob = new Blob([JSON.stringify(list, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'escenarios-wms-' + state.startDate + '.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
+  const fileInput = document.getElementById('importFileInput');
+  document.getElementById('btnImportScenarios').onclick = ()=> fileInput.click();
+  fileInput.onchange = ()=>{
+    const file = fileInput.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      try{
+        const imported = JSON.parse(reader.result);
+        if(!Array.isArray(imported)) throw new Error('El archivo no contiene una lista de escenarios.');
+        const current = loadScenarios();
+        saveScenarios(current.concat(imported));
+        renderScenarioTab();
+        alert('Se importaron ' + imported.length + ' escenario(s).');
+      } catch(e){
+        alert('No se pudo importar el archivo: ' + e.message);
+      }
+      fileInput.value = '';
+    };
+    reader.readAsText(file);
+  };
 }
 
 /* ---------------- TAB 5: COSTOS ---------------- */
 function renderCostLeverTable(){
   const tbl = document.getElementById('costLeverTable');
-  tbl.innerHTML = `<thead><tr><th>Sitio</th><th>Etiquetado</th><th>Costo etiquetado</th><th>Wifi</th><th>Costo wifi</th></tr></thead>
-    <tbody>${state.siteOrder.map(code=>{
+  const mxn = usd => usd * USD_TO_MXN;
+  const laborCostOf = code => { const f = finBySite[code]; return mxn(state.laborChoice[code]==='manual'?f.ManualLabeling:f.LabelPrintersLabelers); };
+  const wifiCostOf = code => { const f = finBySite[code]; return mxn({full:f.WifiFull,optimized:f.WifiFullOptimized,prioritized:f.WifiPrioritized}[state.wifiChoice[code]]); };
+  const countries = [...new Set(state.siteOrder.map(code=>siteBySite[code].Country))];
+  let grandLabor = 0, grandWifi = 0;
+  let bodyHtml = '';
+  countries.forEach(country=>{
+    const group = state.siteOrder.filter(code=>siteBySite[code].Country===country);
+    let subLabor = 0, subWifi = 0;
+    group.forEach(code=>{
       const f = finBySite[code];
-      return `<tr>
-        <td>${code}</td>
+      const lc = laborCostOf(code), wc = wifiCostOf(code);
+      subLabor += lc; subWifi += wc;
+      bodyHtml += `<tr>
+        <td>${siteLabel(code)}</td>
         <td><select class="cell-select" data-code="${code}" data-kind="labor">
-          <option value="printers" ${state.laborChoice[code]==='printers'?'selected':''}>Impresoras (${fmtMoneyK(f.LabelPrintersLabelers)})</option>
-          <option value="manual" ${state.laborChoice[code]==='manual'?'selected':''}>Manual (${fmtMoneyK(f.ManualLabeling)})</option>
+          <option value="printers" ${state.laborChoice[code]==='printers'?'selected':''}>Impresoras (${fmtMoneyK(mxn(f.LabelPrintersLabelers))})</option>
+          <option value="manual" ${state.laborChoice[code]==='manual'?'selected':''}>Manual (${fmtMoneyK(mxn(f.ManualLabeling))})</option>
         </select></td>
-        <td class="num">${fmtMoney(state.laborChoice[code]==='manual'?f.ManualLabeling:f.LabelPrintersLabelers)}</td>
+        <td class="num">${fmtMoney(lc)}</td>
         <td><select class="cell-select" data-code="${code}" data-kind="wifi">
-          <option value="full" ${state.wifiChoice[code]==='full'?'selected':''}>Full (${fmtMoneyK(f.WifiFull)})</option>
-          <option value="optimized" ${state.wifiChoice[code]==='optimized'?'selected':''}>Full Optimized (${fmtMoneyK(f.WifiFullOptimized)})</option>
-          <option value="prioritized" ${state.wifiChoice[code]==='prioritized'?'selected':''}>Prioritized (${fmtMoneyK(f.WifiPrioritized)})</option>
+          <option value="full" ${state.wifiChoice[code]==='full'?'selected':''}>Completo (${fmtMoneyK(mxn(f.WifiFull))})</option>
+          <option value="optimized" ${state.wifiChoice[code]==='optimized'?'selected':''}>Completo Optimizado (${fmtMoneyK(mxn(f.WifiFullOptimized))})</option>
+          <option value="prioritized" ${state.wifiChoice[code]==='prioritized'?'selected':''}>Priorizado (${fmtMoneyK(mxn(f.WifiPrioritized))})</option>
         </select></td>
-        <td class="num">${fmtMoney({full:f.WifiFull,optimized:f.WifiFullOptimized,prioritized:f.WifiPrioritized}[state.wifiChoice[code]])}</td>
+        <td class="num">${fmtMoney(wc)}</td>
       </tr>`;
-    }).join('')}</tbody>`;
+    });
+    grandLabor += subLabor; grandWifi += subWifi;
+    bodyHtml += `<tr style="font-weight:700;background:var(--brand-light);"><td colspan="2">Subtotal ${countryLabel(country)}</td><td class="num">${fmtMoney(subLabor)}</td><td></td><td class="num">${fmtMoney(subWifi)}</td></tr>`;
+  });
+  bodyHtml += `<tr style="font-weight:700;border-top:2px solid var(--line);"><td colspan="2">Total general</td><td class="num">${fmtMoney(grandLabor)}</td><td></td><td class="num">${fmtMoney(grandWifi)}</td></tr>`;
+  tbl.innerHTML = `<thead><tr><th>Sitio</th><th>Etiquetado</th><th>Costo etiquetado (MXN)</th><th>Wifi</th><th>Costo wifi (MXN)</th></tr></thead>
+    <tbody>${bodyHtml}</tbody>`;
   tbl.querySelectorAll('select').forEach(sel=>sel.onchange=()=>{
     const {code, kind} = sel.dataset;
     if(kind==='labor') state.laborChoice[code] = sel.value; else state.wifiChoice[code] = sel.value;
@@ -904,27 +1081,37 @@ function renderCostTab(){
   const maxSite = Math.max(...Object.values(currentCost.costBySite).map(c=>c.total));
   document.getElementById('costBySite').innerHTML = state.siteOrder.map(code=>{
     const c = currentCost.costBySite[code];
-    return `<div class="barh"><div class="name">${code}</div><div class="track"><div class="fill" style="width:${(c.total/maxSite)*100}%"></div></div><div class="amt">${fmtMoneyK(c.total)}</div></div>`;
+    return `<div class="barh"><div class="name">${siteLabel(code)}</div><div class="track"><div class="fill" style="width:${(c.total/maxSite)*100}%"></div></div><div class="amt">${fmtMoneyK(c.total)}</div></div>`;
   }).join('');
   const maxRole = Math.max(...Object.values(currentCost.laborByRole),1);
   document.getElementById('costByRole').innerHTML = ROLE_NAMES.filter(r=>currentCost.laborByRole[r]>0).sort((a,b)=>currentCost.laborByRole[b]-currentCost.laborByRole[a]).map(name=>{
     const v = currentCost.laborByRole[name];
-    return `<div class="barh"><div class="name">${name}</div><div class="track"><div class="fill" style="width:${(v/maxRole)*100}%"></div></div><div class="amt">${fmtMoneyK(v)}</div></div>`;
+    return `<div class="barh"><div class="name">${roleLabel(name)}</div><div class="track"><div class="fill" style="width:${(v/maxRole)*100}%"></div></div><div class="amt">${fmtMoneyK(v)}</div></div>`;
   }).join('');
   const tbl = document.getElementById('costDetailTable');
-  tbl.innerHTML = `<thead><tr><th>Sitio</th><th>Implementación única</th><th>Mano de obra asignada</th><th>Total</th></tr></thead>
-    <tbody>${state.siteOrder.map(code=>{
+  const countries = [...new Set(state.siteOrder.map(code=>siteBySite[code].Country))];
+  let bodyHtml = '';
+  countries.forEach(country=>{
+    const group = state.siteOrder.filter(code=>siteBySite[code].Country===country);
+    let subOneTime=0, subLabor=0, subTotal=0;
+    group.forEach(code=>{
       const c = currentCost.costBySite[code];
-      return `<tr><td>${code}</td><td class="num">${fmtMoney(c.oneTime)}</td><td class="num">${fmtMoney(c.labor)}</td><td class="num"><b>${fmtMoney(c.total)}</b></td></tr>`;
-    }).join('')}
-    <tr style="font-weight:700;border-top:2px solid var(--line);"><td>Total</td><td class="num">${fmtMoney(currentCost.oneTimeTotal)}</td><td class="num">${fmtMoney(currentCost.laborTotal)}</td><td class="num">${fmtMoney(currentCost.grandTotal)}</td></tr>
-    </tbody>`;
+      subOneTime += c.oneTime; subLabor += c.labor; subTotal += c.total;
+      bodyHtml += `<tr><td>${siteLabel(code)}</td><td class="num">${fmtMoney(c.oneTime)}</td><td class="num">${fmtMoney(c.labor)}</td><td class="num"><b>${fmtMoney(c.total)}</b></td></tr>`;
+    });
+    bodyHtml += `<tr style="font-weight:700;background:var(--brand-light);"><td>Subtotal ${countryLabel(country)}</td><td class="num">${fmtMoney(subOneTime)}</td><td class="num">${fmtMoney(subLabor)}</td><td class="num">${fmtMoney(subTotal)}</td></tr>`;
+  });
+  bodyHtml += `<tr style="font-weight:700;border-top:2px solid var(--line);"><td>Total general</td><td class="num">${fmtMoney(currentCost.oneTimeTotal)}</td><td class="num">${fmtMoney(currentCost.laborTotal)}</td><td class="num">${fmtMoney(currentCost.grandTotal)}</td></tr>`;
+  tbl.innerHTML = `<thead><tr><th>Sitio</th><th>Implementación única</th><th>Mano de obra asignada</th><th>Total</th></tr></thead>
+    <tbody>${bodyHtml}</tbody>`;
 }
 
 /* ---------------- TAB 6: EXPLICACIÓN ---------------- */
 function renderExplain(){
   document.getElementById('explainBody').innerHTML = `
-    <div class="warn-box"><b>Reglas duras del ejercicio:</b> el simulador nunca escribe sobre el archivo original; toda la data (sitios, costos, roles, fases, asignación de recursos) se lee tal cual. Los escenarios "Actual" y "Escenario 1" del archivo son cargables y calculables desde el panel izquierdo.</div>
+    <div class="warn-box"><b>Reglas duras del ejercicio:</b> el simulador nunca escribe sobre el archivo original; toda la data (sitios, costos, roles, fases, asignación de recursos) se lee tal cual. Los escenarios "Actual" y "Escenario 1" del archivo son cargables y calculables desde el panel izquierdo.
+      <br><br><i>Nota de idioma:</i> los nombres de pestañas y columnas del Excel se citan tal cual vienen en el archivo (en inglés), para que puedas ubicarlos exactamente si abres el Excel a comparar. Los nombres de rol y de fase sí se muestran traducidos al español en toda la app, con el término original entre paréntesis la primera vez que aparece cada uno (pestaña 3 para roles, pestaña 2 para fases).
+    </div>
 
     <details class="explain"><summary>ENTREGABLES</summary><div class="body">
       Es la primera pestaña del archivo y no aporta datos de cálculo — define el objetivo del ejercicio (completar el programa en 8 meses, y entre las alternativas que lo logren, la de menor costo) y trae la fórmula exacta de la rúbrica de calificación (por ejemplo, la celda de "Rúbrica" calcula <code>I21/H21*H22</code>, es decir, tu puntaje obtenido sobre el máximo, aplicado al peso de esa mitad). De ahí salen literalmente los 5 entregables que construye este simulador: pestañas 1 a 5 de esta app corresponden uno a uno a los 5 puntos listados en esa hoja.
@@ -934,24 +1121,25 @@ function renderExplain(){
       15 sitios (7 México, 8 Colombia) agrupados en 4 Clusters. Aporta datos operativos (capacidad, almacenes, forklifts, wifi) que son descriptivos — el archivo no los conecta a ninguna fórmula de costo o duración, así que el simulador los muestra como contexto pero no los usa para calcular fechas ni costos.
     </div></details>
 
-    <details class="explain"><summary>Financials (USD)</summary><div class="body">
-      Costo de implementación por sitio. La columna "Costs without Labelers & WiFi" ya es la suma de Implementation Costs + Devices + Forklift Structure + Warehouse Signage + Labels (fórmula del propio archivo). Encima de eso, cada sitio elige <b>una</b> forma de etiquetado (impresoras vs. manual) y <b>una</b> opción de wifi (Full / Full Optimized / Prioritized) — son alternativas, no costos acumulables. El simulador las deja como palanca por sitio (pestaña 5) y por defecto elige la opción más económica de cada una.
+    <details class="explain" open><summary>Financials (USD)</summary><div class="body">
+      Costo de implementación por sitio. La columna "Costs without Labelers & WiFi" ya es la suma de Implementation Costs + Devices + Forklift Structure + Warehouse Signage + Labels (fórmula del propio archivo). Encima de eso, cada sitio elige <b>una</b> forma de etiquetado (impresoras vs. manual) y <b>una</b> opción de wifi (Completo / Completo Optimizado / Priorizado) — son alternativas, no costos acumulables. El simulador las deja como palanca por sitio (pestaña 5) y por defecto elige la opción más económica de cada una.
       <br><br>"Benefits per month" es un beneficio mensual, no un costo — no se incluye en el resumen de costos (entregable 5) para no inflarlo artificialmente.
+      <br><br><b>Nota de moneda (corrección importante):</b> esta hoja está en <b>dólares (USD)</b> — lo dice el nombre de la pestaña — mientras que "Resource Master" trae el costo de mano de obra en <b>pesos (MXN)</b> (columna "Average Monthly Cost (MXN)"). Son monedas distintas en el mismo archivo. El simulador convierte todos los montos de esta hoja a pesos usando un tipo de cambio de <b>18.00 MXN por USD</b> (indicado por Radec) antes de sumarlos al costo de mano de obra — así todo el resumen de costos queda reportado en una sola moneda (MXN). Esta conversión no afecta la fecha de término del programa (eso depende de dotación, orden y frentes, no de moneda), solo el costo total reportado.
     </div></details>
 
     <details class="explain"><summary>Resource Master</summary><div class="body">
-      17 roles con costo mensual, modalidad y dotación para "Actual" y "Escenario 1". Tres roles tienen variante Interna/Externa (Change Management Lead, Infrastructure Lead, Functional Lead) con la misma capacidad de multitarea: para verificar si hay suficiente gente en un momento dado, el simulador junta ambas variantes en una sola bolsa de capacidad por rol; para el costo, cada variante se cobra a su propia tarifa.
-      <br><br><b>Fixed vs. Flexible</b> define cómo se cobra: los roles "Fixed" se pagan como nómina fija (dotación × tarifa mensual × meses que dura el programa completo); los "Flexible" se pagan solo por el uso real (FTE-semana consumidas × tarifa equivalente semanal) — esto es un supuesto del simulador, ya que el archivo no detalla la fórmula de facturación.
-      <br><br><b>Can Multitask</b> define cómo se suma la demanda de un rol cuando varios sitios lo necesitan al mismo tiempo: "Yes" y "Partial" se tratan igual (la fracción de FTE se suma directamente); "No" obliga a reservar una persona completa por cada sitio concurrente que lo requiera, sin importar la fracción indicada (una persona en sitio no se puede partir entre ubicaciones).
+      17 roles con costo mensual, modalidad y dotación para "Actual" y "Escenario 1". Tres roles tienen variante Interna/Externa (${roleLabelFull('Change Management Lead')}, ${roleLabelFull('Infrastructure Lead')}, ${roleLabelFull('Functional Lead')}) con la misma capacidad de multitarea: para verificar si hay suficiente gente en un momento dado, el simulador junta ambas variantes en una sola bolsa de capacidad por rol; para el costo, cada variante se cobra a su propia tarifa.
+      <br><br><b>Costo Fijo vs. Flexible</b> define cómo se cobra: los roles de costo "Fixed" (Fijo) se pagan como nómina fija (dotación × tarifa mensual × meses que dura el programa completo); los "Flexible" se pagan solo por el uso real (FTE-semana consumidas × tarifa equivalente semanal) — esto es un supuesto del simulador, ya que el archivo no detalla la fórmula de facturación.
+      <br><br><b>Multitarea (columna "Can Multitask")</b> define cómo se suma la demanda de un rol cuando varios sitios lo necesitan al mismo tiempo: "Sí" y "Parcial" se tratan igual (la fracción de FTE se suma directamente); "No" obliga a reservar una persona completa por cada sitio concurrente que lo requiera, sin importar la fracción indicada (una persona en sitio no se puede partir entre ubicaciones).
     </div></details>
 
     <details class="explain"><summary>Implementation Phases</summary><div class="body">
       8 fases por cluster, en dos madureces: "A" (primer sitio del cluster) y "B" (sitios siguientes del mismo cluster, más rápidos por curva de aprendizaje). El simulador asigna A al primer sitio de cada cluster que arranca según el orden y los frentes que definas, y B a los demás sitios del mismo cluster.
-      <br><br><i>Nota de dato:</i> Cluster 4 (Site 12) tiene la fase "Design Adaptation" en 0 semanas en ambas madureces, y A=B en las 8 fases (no hay diferencia de curva de aprendizaje) — se respeta tal cual, sin corregirlo, porque ese cluster solo tiene un sitio.
+      <br><br><i>Nota de dato:</i> Cluster 4 (Site 12) tiene la fase de ${phaseLabelFull('Design Adaptation')} en 0 semanas en ambas madureces, y A=B en las 8 fases (no hay diferencia de curva de aprendizaje) — se respeta tal cual, sin corregirlo, porque ese cluster solo tiene un sitio.
     </div></details>
 
     <details class="explain"><summary>Phase-Resource Allocation</summary><div class="body">
-      Define cuántos FTE de cada rol consume cada fase, por cluster. Cuando un rol aparece más de una vez en la misma fase (ej. 2 "Functional Lead" en Hypercare), el simulador suma ambas filas como una necesidad de 2 personas simultáneas para ese sitio.
+      Define cuántos FTE de cada rol consume cada fase, por cluster. Cuando un rol aparece más de una vez en la misma fase (ej. 2 ${roleLabelFull('Functional Lead')} en ${phaseLabelFull('Hypercare')}), el simulador suma ambas filas como una necesidad de 2 personas simultáneas para ese sitio.
       <br><br><b>Hueco de datos importante:</b> esta hoja <u>no tiene ninguna fila para Cluster 4</u> (solo cubre Clusters 1, 2 y 3), aunque Site 12 (Cluster 4) sí existe en Sites Master e Implementation Phases. Por regla del ejercicio no se inventa ese dato: el simulador calcula las fechas de Site 12 con normalidad (usa sus duraciones de fase), pero su consumo de recursos y costo de mano de obra asignada quedan en 0 — es una limitación del archivo de origen, no del modelo.
     </div></details>
 
@@ -960,7 +1148,7 @@ function renderExplain(){
         <li>Los sitios entran a una cola en el orden que defines y se reparten entre los frentes en paralelo que definas (el primer frente libre toma el siguiente sitio de la cola).</li>
         <li>Antes de que un sitio arranque <b>o pase a su siguiente fase</b>, el simulador verifica que la dotación disponible de cada rol alcance esa fase, sumando la demanda de todos los sitios/frentes activos en ese instante. Si no alcanza, el sitio se queda pendiente en esa fase y reintenta la semana siguiente — no se salta la validación, y por eso reducir la dotación de un rol que sí se usa en el cronograma sí puede alargar la fecha de término.</li>
         <li>Esto significa que la dotación por rol (pestaña 3) es una palanca real sobre la fecha, no solo sobre el costo: subir "frentes en paralelo" sin subir la gente que esas fases necesitan simplemente hace que los sitios adicionales se queden esperando recursos.</li>
-        <li>El programa termina cuando el último sitio completa su fase de Hypercare. Si con la dotación actual algún sitio nunca logra completarse, el tablero lo marca en rojo como "bloqueado" en vez de mostrar una fecha ficticia.</li>
+        <li>El programa termina cuando el último sitio completa su fase de ${phaseLabelFull('Hypercare')}. Si con la dotación actual algún sitio nunca logra completarse, el tablero lo marca en rojo como "bloqueado" en vez de mostrar una fecha ficticia.</li>
       </ul>
     </div></details>
 
@@ -968,7 +1156,7 @@ function renderExplain(){
       Ni "Actual" ni "Escenario 1" cumplen el objetivo de 8 meses con la configuración original de 3 frentes (lo puedes confirmar tú mismo: son los dos primeros botones del panel izquierdo, y la comparación automática de la pestaña 4 los recalcula en vivo cada vez que abres esta app — no es un resultado guardado de antemano). El escenario recomendado se encontró con un proceso de tres pasos, no a mano:
       <ol style="margin:6px 0 6px 18px;padding:0;">
         <li><b>Frentes en paralelo:</b> se probaron valores de 3 a 14 frentes con la dotación de "Escenario 1", confirmando que con pocos frentes el programa no baja de ~15 meses aunque sobre gente.</li>
-        <li><b>Dotación mínima por rol:</b> con los frentes fijos, se corrió una búsqueda binaria automática rol por rol — para cada uno de los 18 renglones de "Resource Master", se probó el valor más bajo de dotación que seguía sin alargar la fecha de término. Así se encontró que 4 roles del archivo (Warehouse Manager Org A, los dos Project Manager por país y Support Lead) se pueden bajar a 0 sin ningún efecto, porque la propia hoja "Phase-Resource Allocation" nunca los usa en ninguna fase.</li>
+        <li><b>Dotación mínima por rol:</b> con los frentes fijos, se corrió una búsqueda binaria automática rol por rol — para cada uno de los 18 renglones de "Resource Master", se probó el valor más bajo de dotación que seguía sin alargar la fecha de término. Así se encontró que 4 roles del archivo (${roleLabelFull('Warehouse Manager Org A')}, los dos ${roleLabel('Project Manager Country A')}/${roleLabel('Project Manager Country B')} por país y ${roleLabelFull('Support Lead')}) se pueden bajar a 0 sin ningún efecto, porque la propia hoja "Phase-Resource Allocation" nunca los usa en ninguna fase.</li>
         <li><b>Orden de entrada de los sitios:</b> se generaron y probaron más de 100 órdenes distintos (manuales y aleatorios) de los 15 sitios, repitiendo el paso 2 en cada uno, porque el orden cambia cómo se reparte la carga de cada rol entre los frentes activos. Varios órdenes muy distintos entre sí convergieron al mismo costo mínimo — esa coincidencia es la señal de que ya no había más margen por ese lado.
       </ol>
       El resultado de ese proceso quedó fijo como constante en el código (<code>OPTIMAL_SITE_ORDER</code>, <code>OPTIMAL_HEADCOUNTS_BY_ROW</code>, <code>OPTIMAL_FRONTS</code>), y es exactamente lo que la pestaña 4 recalcula en la fila "Óptimo encontrado" de la comparación automática — puedes copiar esos mismos valores manualmente en el panel izquierdo (orden de sitios y dotación en la pestaña 3, frentes arriba) para verlo llegar al mismo resultado tú mismo, o modificarlos y ver cómo cambia.
